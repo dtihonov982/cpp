@@ -14,7 +14,7 @@ public:
     entry() {
 
     }
-    //!Can I use same name as attributes?
+
     entry(string d, string debit, string credit, double s, string descr = "") {
         date = d;
         dt = debit;
