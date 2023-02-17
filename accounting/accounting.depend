@@ -1,7 +1,0 @@
-# depslib dependency file v1.0
-1676558917 source:d:\prog\accounting\main.cpp
-	<iostream>
-	<ctime>
-	<time.h>
-	<iomanip>
-

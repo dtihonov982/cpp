@@ -1,13 +1,10 @@
 #include <iostream>
-#include <ctime>
-#include <time.h>
-#include <iomanip>
 
 using namespace std;
 
 class entry {
 private:
-    time_t date;
+    string date;
     string dt;
     string ct;
     double amount;
@@ -17,7 +14,8 @@ public:
     entry() {
 
     }
-    entry(time_t d, string debit, string credit, double s, string descr = "") {
+
+    entry(string d, string debit, string credit, double s, string descr = "") {
         date = d;
         dt = debit;
         ct = credit;
@@ -25,7 +23,7 @@ public:
         description = descr;
     }
 
-    time_t get_date() {
+    string get_date() {
         return date;
     }
 
@@ -45,7 +43,7 @@ public:
         return description;
     }
 
-    void set_date(time_t d) {
+    void set_date(string d) {
         date = d;
     }
 
@@ -65,14 +63,6 @@ public:
         description = d;
     }
 
-    void setDateByString(string dateString, string format = "%d.%m.%Y") {
-        tm tm;
-        istringstream ss(dateString);
-        ss >> get_time(&tm, format.c_str()); // or just %T in this case
-        date = mktime(&tm);
-    }
-
-    /*
     void input() {
         cout << "date: ";
         cin >> date;
@@ -86,7 +76,6 @@ public:
         //!Error
         cin >> description;
     }
-    */
 
     void print() {
         cout << date << "\t" << dt << "\t" << ct << "\t" << amount << "\t" << description << endl;
@@ -110,24 +99,37 @@ public:
     }
 
     //stream param
-    /*
     void print() {
         for (int i = 0; i < length; i++) {
             entry e = entries[i];
             cout << e.get_date() << "\t" << e.get_dt() << "\t" << e.get_ct() << "\t" << e.get_amount() << "\t" << e.get_description() << endl;
         }
     }
-    */
+
+};
+
+class TableOfAccounts {
+
+};
+
+class AccountingSystem {
+private:
+    journal Journal;
+    TableOfAccounts accounts;
 
 };
 
 
 
 int main() {
-    /*
     journal Journal;
 
-
+    entry e;
+    e.set_date("21/01/2023");
+    e.set_dt("51");
+    e.set_ct("80");
+    e.set_amount(100.00);
+    e.set_description("Creating of the company.");
 
     Journal.append(e);
 
@@ -138,14 +140,7 @@ int main() {
     Journal.append( entry("24/01/2023", "41", "60", 50.00) );
 
     Journal.print();
-    */
 
-    entry e;
-    e.setDateByString("21.01.2023");
-    e.set_dt("51");
-    e.set_ct("80");
-    e.set_amount(100.00);
-    e.set_description("Creating of the company.");
 
     return 0;
 }
