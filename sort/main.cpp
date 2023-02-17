@@ -83,7 +83,7 @@ void printd(T A[], int length, bool prefix=true) {
     cout << endl;
 }
 
-//--------------------------Heap sorting---------------------------------
+//--------------------------Heap sorting----------------------------------
 
 int parent(int i){
     if(!i) return 0;
