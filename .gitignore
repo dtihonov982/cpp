@@ -1,2 +1,7 @@
-*
-!*.cpp
+*.exe
+/obj
+/bin
+*.layout
+*.depend
+*.cbp
+*.o
