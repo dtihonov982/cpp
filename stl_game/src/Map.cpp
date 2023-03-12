@@ -1,38 +1,19 @@
 #include "Map.h"
 #include "TextureManager.h"
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 //0 w 1 g 2 d
 
-table lvl1 = {
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,2,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2 },
-};
 
-Map::Map(): map(rows, std::vector<int>(columns))
+Map::Map()
 {
     dirt = TextureManager::LoadTexture("assets/dirt.png");
     grass = TextureManager::LoadTexture("assets/grass.png");
     water = TextureManager::LoadTexture("assets/water.png");
-    loadMap(lvl1);
+    //loadMap(lvl1);
+    loadFile("assets/lvl1.txt");
     src.x = 0;
     src.y = 0;
     src.w = 32;
@@ -44,7 +25,26 @@ Map::Map(): map(rows, std::vector<int>(columns))
 }
 
 void Map::loadMap(const table& map_) {
+    rows = map_.size();
+    columns = map_[0].size();
     map = map_;
+}
+
+void Map::loadFile(const std::string& path) {
+    std::ifstream is(path);
+    std::string line;
+    while (std::getline(is, line)) {
+        std::istringstream ss(line);
+        int tmp;
+        std::vector<int> currentRow;
+        while (ss >> tmp) {
+            currentRow.push_back(tmp);
+        }
+        map.push_back(currentRow);
+        currentRow.resize(0);
+    }
+    rows = map.size();
+    columns = map[0].size();
 }
 
 void Map::drawMap() {
