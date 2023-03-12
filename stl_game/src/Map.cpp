@@ -9,11 +9,13 @@
 
 Map::Map()
 {
-    dirt = TextureManager::LoadTexture("assets/dirt.png");
-    grass = TextureManager::LoadTexture("assets/grass.png");
-    water = TextureManager::LoadTexture("assets/water.png");
-    //loadMap(lvl1);
+    //An order of pushing is important.
+    textures.push_back(TextureManager::LoadTexture("assets/water.png"));
+    textures.push_back(TextureManager::LoadTexture("assets/grass.png"));
+    textures.push_back(TextureManager::LoadTexture("assets/dirt.png"));
+
     loadFile("assets/lvl1.txt");
+
     src.x = 0;
     src.y = 0;
     src.w = 32;
@@ -22,6 +24,12 @@ Map::Map()
     dst.y = 0;
     dst.w = 32;
     dst.h = 32;
+}
+
+Map::~Map() {
+    for (auto& ptr: textures) {
+        SDL_DestroyTexture(ptr);
+    }
 }
 
 void Map::loadMap(const table& map_) {
@@ -52,17 +60,8 @@ void Map::drawMap() {
         dst.y = row * 32;
         for (int column = 0; column < columns; ++column) {
             dst.x = column * 32;
-            switch(map[row][column]) {
-            case 0:
-                TextureManager::Draw(water, src, dst);
-                break;
-            case 1:
-                TextureManager::Draw(grass, src, dst);
-                break;
-            case 2:
-                TextureManager::Draw(dirt, src, dst);
-                break;
-            }
+            int code = map[row][column];
+            TextureManager::Draw(textures[code], src, dst);
         }
     }
 }

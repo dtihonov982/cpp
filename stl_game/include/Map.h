@@ -17,9 +17,6 @@ public:
 private:
     SDL_Rect src, dst;
     std::vector<SDL_Texture*> textures;
-    SDL_Texture* dirt;
-    SDL_Texture* grass;
-    SDL_Texture* water;
 
     int columns = 0;
     int rows = 0;

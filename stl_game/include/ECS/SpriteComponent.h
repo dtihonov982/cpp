@@ -12,7 +12,9 @@ public:
         setTex(filename);
     }
     void setTex(const char* filename) {
-        SDL_DestroyTexture(texture);
+        if (!texture) {
+            SDL_DestroyTexture(texture);
+        }
         texture = TextureManager::LoadTexture(filename);
     }
     void init() override {
@@ -31,7 +33,7 @@ public:
 
 private:
     PositionComponent* position;
-    SDL_Texture* texture;
+    SDL_Texture* texture = nullptr;
     SDL_Rect srcR, dstR;
 };
 
