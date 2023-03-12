@@ -85,6 +85,9 @@ struct Object {
     void move(Point pos) {
         pos_ = pos;
     }    
+    bool at(int x, int y) {
+        return pos_.x == x && pos_.y == y;
+    }
 };
 
 struct Fruit: public Object {
@@ -92,10 +95,10 @@ struct Fruit: public Object {
 
 Fruit fruit;
 
-struct Head: public Object {
+/*struct Head: public Object {
 };
 
-Head head;
+Head head;*/
 
 
 void Setup()
@@ -119,12 +122,11 @@ void Draw()
     {
         for (int j = 0; j < width; j++)
         {
-            Point currentPoint = {j, i};
             if (j == 0)
                 std::cout << "#";
             if (i == y && j == x)
                 std::cout << "O";
-            else if (fruit.pos_ == currentPoint)
+            else if (fruit.at(j, i))
                 std::cout << "F";
             else
             {
@@ -137,7 +139,6 @@ void Draw()
 
             }
                  
- 
             if (j == width - 1)
                 std::cout << "#";
         }
@@ -205,7 +206,7 @@ void Logic()
         gameOver = true;
     }
  
-    if (fruit.pos_.x == x && fruit.pos_.y == y)
+    if (fruit.at(x, y))
     {
         score += 10;
         fruit.move(makeRandPoint());
