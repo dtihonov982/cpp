@@ -1,0 +1,101 @@
+Project title : Matrix
+Project path  : D:\Prog\Matrix\
+
+Frame function: Matrix<int>::product (include/Matrix.h:107)
+Frame address : 0x61feb0
+--------------------------------------------------------------------------------
+0x403d90	push   %ebp
+0x403d91	mov    %esp,%ebp
+0x403d93	sub    $0x48,%esp
+0x403d96	mov    %ecx,-0x2c(%ebp)
+0x403d99	mov    0x8(%ebp),%eax
+0x403d9c	mov    0x8(%eax),%edx
+0x403d9f	mov    0xc(%ebp),%eax
+0x403da2	mov    0x4(%eax),%eax
+0x403da5	cmp    %eax,%edx
+0x403da7	je     0x403db8 <Matrix<int>::product(Matrix<int> const&)+40>
+0x403da9	mov    -0x2c(%ebp),%eax
+0x403dac	mov    %eax,%ecx
+0x403dae	call   0x40409c <Matrix<int>::Matrix()>
+0x403db3	jmp    0x403eb5 <Matrix<int>::product(Matrix<int> const&)+293>
+0x403db8	mov    0xc(%ebp),%eax
+0x403dbb	mov    0x8(%eax),%ecx
+0x403dbe	mov    0x8(%ebp),%eax
+0x403dc1	mov    0x4(%eax),%edx
+0x403dc4	lea    -0x24(%ebp),%eax
+0x403dc7	mov    %ecx,0x4(%esp)
+0x403dcb	mov    %edx,(%esp)
+0x403dce	mov    %eax,%ecx
+0x403dd0	call   0x403ff4 <Matrix<int>::Matrix(int, int)>
+0x403dd5	sub    $0x8,%esp
+0x403dd8	movl   $0x0,-0xc(%ebp)
+0x403ddf	mov    0x8(%ebp),%eax
+0x403de2	mov    0x4(%eax),%eax
+0x403de5	cmp    -0xc(%ebp),%eax
+0x403de8	jle    0x403e97 <Matrix<int>::product(Matrix<int> const&)+263>
+0x403dee	movl   $0x0,-0x10(%ebp)
+0x403df5	mov    0xc(%ebp),%eax
+0x403df8	mov    0x8(%eax),%eax
+0x403dfb	cmp    -0x10(%ebp),%eax
+0x403dfe	jle    0x403e8e <Matrix<int>::product(Matrix<int> const&)+254>
+0x403e04	movl   $0x0,-0x14(%ebp)
+0x403e0b	movl   $0x0,-0x18(%ebp)
+0x403e12	mov    0x8(%ebp),%eax
+0x403e15	mov    0x8(%eax),%eax
+0x403e18	cmp    -0x18(%ebp),%eax
+0x403e1b	jle    0x403e5b <Matrix<int>::product(Matrix<int> const&)+203>
+0x403e1d	mov    0x8(%ebp),%eax
+0x403e20	mov    (%eax),%eax
+0x403e22	mov    -0xc(%ebp),%edx
+0x403e25	shl    $0x2,%edx
+0x403e28	add    %edx,%eax
+0x403e2a	mov    (%eax),%eax
+0x403e2c	mov    -0x18(%ebp),%edx
+0x403e2f	shl    $0x2,%edx
+0x403e32	add    %edx,%eax
+0x403e34	mov    (%eax),%edx
+0x403e36	mov    0xc(%ebp),%eax
+0x403e39	mov    (%eax),%eax
+0x403e3b	mov    -0x18(%ebp),%ecx
+0x403e3e	shl    $0x2,%ecx
+0x403e41	add    %ecx,%eax
+0x403e43	mov    (%eax),%eax
+0x403e45	mov    -0x10(%ebp),%ecx
+0x403e48	shl    $0x2,%ecx
+0x403e4b	add    %ecx,%eax
+0x403e4d	mov    (%eax),%eax
+0x403e4f	imul   %edx,%eax
+0x403e52	add    %eax,-0x14(%ebp)
+0x403e55	addl   $0x1,-0x18(%ebp)
+0x403e59	jmp    0x403e12 <Matrix<int>::product(Matrix<int> const&)+130>
+0x403e5b	lea    -0x24(%ebp),%eax
+0x403e5e	mov    -0xc(%ebp),%edx
+0x403e61	mov    %edx,(%esp)
+0x403e64	mov    %eax,%ecx
+0x403e66	call   0x40412c <Matrix<int>::operator[](int)>
+0x403e6b	sub    $0x4,%esp
+0x403e6e	mov    %eax,%edx
+0x403e70	mov    -0x10(%ebp),%eax
+0x403e73	shl    $0x2,%eax
+0x403e76	add    %eax,%edx
+0x403e78	mov    -0x14(%ebp),%eax
+0x403e7b	mov    %eax,(%edx)
+0x403e7d	mov    $0x0,%eax
+0x403e82	mov    %eax,-0x14(%ebp)
+0x403e85	addl   $0x1,-0x10(%ebp)
+0x403e89	jmp    0x403df5 <Matrix<int>::product(Matrix<int> const&)+101>
+0x403e8e	addl   $0x1,-0xc(%ebp)
+0x403e92	jmp    0x403ddf <Matrix<int>::product(Matrix<int> const&)+79>
+0x403e97	mov    -0x2c(%ebp),%eax
+0x403e9a	mov    -0x24(%ebp),%edx
+0x403e9d	mov    %edx,(%eax)
+0x403e9f	mov    -0x20(%ebp),%edx
+0x403ea2	mov    %edx,0x4(%eax)
+0x403ea5	mov    -0x1c(%ebp),%edx
+0x403ea8	mov    %edx,0x8(%eax)
+0x403eab	lea    -0x24(%ebp),%eax
+0x403eae	mov    %eax,%ecx
+0x403eb0	call   0x4040c8 <Matrix<int>::~Matrix()>
+0x403eb5	mov    -0x2c(%ebp),%eax
+0x403eb8	leave
+0x403eb9	ret    $0x8

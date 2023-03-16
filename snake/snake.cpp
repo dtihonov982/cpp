@@ -215,7 +215,6 @@ void Logic()
 }
 int main()
 {
-#if 1
     Setup();
     while (!gameOver)
     {
@@ -224,25 +223,5 @@ int main()
         Logic();
         Sleep(10); //sleep(10);
     }
-#endif 
-
-#if 0
-    Tail tail;
-    tail.increase();
-    tail.move({1, 1});
-    std::cout << tail.coords << std::endl;
-    tail.increase();
-    tail.move({2, 2});
-    std::cout << tail.coords << std::endl;
-    tail.move({3, 2});
-    std::cout << tail.coords << std::endl;
-    tail.move({4, 2});
-    std::cout << tail.coords << std::endl;
-    srand(time(0));
-    Fruit fruit1;
-    fruit.move(makeRandPoint());
-    std::cout << fruit.pos_;
-#endif
-
     return 0;
 }
