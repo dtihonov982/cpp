@@ -10,22 +10,25 @@ public:
 	Matrix();
 	Matrix(int m_, int n_);
 	Matrix(std::initializer_list<std::initializer_list<T>> lst);
-	Matrix(const Matrix<T>& rhs);
+	
+	Matrix(const Matrix<T>& other);
+	Matrix<T>& operator=(const Matrix<T>& other);
 	Matrix(Matrix<T>&& other) noexcept;
+	Matrix<T>& operator=(Matrix<T>&& other) noexcept;
 	~Matrix();
+	
 	void output(std::ostream& out) const;
 	void loadFile(std::string filename);
+	
 	void free();
 	void copy(const Matrix<T>& rhs);
 
 	T* operator[](int i);
-	Matrix<T>& operator=(const Matrix<T>& rhs);
-	Matrix<T>& operator=(Matrix<T>&& other) noexcept;
-	T& at(int i, int j);
-	Matrix<T> product(const Matrix& B);
-	Matrix<T> pow(int n);
-private:
 
+	T& at(int i, int j);
+	Matrix<T> product(const Matrix& B) const;
+	Matrix<T> pow(int n) const;
+private:
 	T** data = nullptr;
 	int rows = 0;
 	int cols = 0;
@@ -33,7 +36,9 @@ private:
 
 template<typename T>
 Matrix<T>::Matrix() {
+#ifdef DEBUG
     std::cout << "# Matrix default ctor. " << this << std::endl;
+#endif
 }
 
 template<typename T>
@@ -45,55 +50,6 @@ Matrix<T>::Matrix(int n_, int m_) {
     }
     rows = m_;
     cols = n_;
-}
-
-template<typename T>
-void Matrix<T>::loadFile(std::string filename) {
-
-
-}
-
-template<typename T>
-Matrix<T>::Matrix(const Matrix<T>& rhs) {
-    std::cout << "# Matrix copy ctor. " << this << std::endl;
-    copy(rhs);
-}
-
-template<typename T>
-void Matrix<T>::copy(const Matrix<T>& rhs) {
-    rows = rhs.rows;
-    cols = rhs.cols;
-    data = new T*[rows];
-    for (int i = 0; i < rows; ++i) {
-        data[i] = new T[cols];
-        for (int j = 0; j < cols; ++j) {
-            data[i][j] = rhs.data[i][j];
-        }
-    }
-}
-
-template<typename T>
-Matrix<T>::~Matrix() {
-    std::cout << "# Matrix dtor  " << this << " data=" << data << std::endl;
-    free();
-}
-
-template<typename T>
-void Matrix<T>::free() {
-    for (int i = 0; i < rows; ++i) {
-        delete[] data[i];
-    }
-    delete[] data;
-}
-
-template<typename T>
-void Matrix<T>::output(std::ostream& out) const {
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            out << data[i][j] << " ";
-        }
-        out << std::endl;
-    }
 }
 
 template<typename T>
@@ -114,6 +70,105 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
 }
 
 template<typename T>
+void Matrix<T>::loadFile(std::string filename) {
+
+
+}
+
+template<typename T>
+Matrix<T>::Matrix(const Matrix<T>& other) {
+#ifdef DEBUG
+    std::cout << "# Matrix copy ctor. " << this << std::endl;
+#endif
+    copy(other);
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other) {
+#ifdef DEBUG
+    std::cout << "# Matrix copy assignment. " << this << std::endl;
+#endif
+    if (this == &other) {
+        return *this;
+    }
+    free();
+    copy(other);
+    return *this;
+}
+
+template<typename T>
+Matrix<T>::Matrix(Matrix<T>&& other) noexcept {
+#ifdef DEBUG
+    std::cout << "# Matrix move ctor. " << this << std::endl;
+#endif
+    data = other.data;
+    rows = other.rows;
+    cols = other.cols;
+    other.data = nullptr;
+    other.rows = 0;
+    other.cols = 0;
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other) noexcept {
+#ifdef DEBUG
+    std::cout << "# Matrix move assign. " << this << std::endl;
+#endif
+    if (this == &other) {
+        return *this;
+    }
+    free();
+    data = other.data;
+    rows = other.rows;
+    cols = other.cols;
+    other.data = nullptr;
+    other.rows = 0;
+    other.cols = 0;
+    return *this;
+}
+
+template<typename T>
+Matrix<T>::~Matrix() {
+#ifdef DEBUG
+    std::cout << "# Matrix dtor  " << this << " data=" << data << std::endl;
+#endif
+    free();
+}
+
+template<typename T>
+void Matrix<T>::copy(const Matrix<T>& other) {
+    rows = other.rows;
+    cols = other.cols;
+    data = new T*[rows];
+    for (int i = 0; i < rows; ++i) {
+        data[i] = new T[cols];
+        for (int j = 0; j < cols; ++j) {
+            data[i][j] = other.data[i][j];
+        }
+    }
+}
+
+template<typename T>
+void Matrix<T>::free() {
+    for (int i = 0; i < rows; ++i) {
+        delete[] data[i];
+    }
+    delete[] data;
+}
+
+template<typename T>
+void Matrix<T>::output(std::ostream& out) const {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            out << data[i][j] << " ";
+        }
+        out << std::endl;
+    }
+}
+
+
+
+template<typename T>
 T& Matrix<T>::at(int i, int j) {
     return data[i][j];
 }
@@ -125,25 +180,26 @@ T* Matrix<T>::operator[](int i) {
 
 
 template<typename T>
-Matrix<T> Matrix<T>::product(const Matrix& B) {
+Matrix<T> Matrix<T>::product(const Matrix& B) const {
     if (cols != B.rows) {
-        return Matrix<T>();
+        throw std::invalid_argument();
     }
     Matrix<T> result(rows, B.cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < B.cols; ++j) {
+	    //? is ~T invokes in this cycle?
             T sum{};
             for (int k = 0; k < cols; ++k) {
                 sum += data[i][k]*B.data[k][j];
             }
             result[i][j] = sum;
-            sum = T{};
         }
     }
     return result;
 }
+
 template<typename T>
-Matrix<T> Matrix<T>::pow(int n) {
+Matrix<T> Matrix<T>::pow(int n) const {
     Matrix<T> result(*this);
     if (n == 1) {
         return result;
@@ -156,49 +212,10 @@ Matrix<T> Matrix<T>::pow(int n) {
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::operator=(const Matrix<T>& rhs) {
-    std::cout << "# Matrix copy assignment. " << this << std::endl;
-    if (this == &rhs) {
-        return *this;
-    }
-    free();
-    copy(rhs);
-    return *this;
-}
-
-template<typename T>
 std::ostream& operator<<(std::ostream& os, const Matrix<T>& M) {
     M.output(os);
     return os;
 }
-
-template<typename T>
-Matrix<T>::Matrix(Matrix<T>&& other) noexcept {
-    std::cout << "# Matrix move ctor. " << this << std::endl;
-    copy(other);
-    other.data = nullptr;
-    other.rows = 0;
-    other.cols = 0;
-}
-
-template<typename T>
-Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other) noexcept {
-    std::cout << "# Matrix move assign. " << this << std::endl;
-    if (this == &other) {
-        return *this;
-    }
-    free();
-    copy(other);
-    other.data = nullptr;
-    other.rows = 0;
-    other.cols = 0;
-
-}
-
-
-
-
-
 
 
 #endif
