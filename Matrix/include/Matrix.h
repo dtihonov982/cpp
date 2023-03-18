@@ -2,6 +2,7 @@
 #define MATRIX_H
 
 #include <iostream>
+#include <cstring>
 
 
 template<typename T>
@@ -9,7 +10,7 @@ class Matrix {
 public:
 	Matrix();
 	Matrix(int m_, int n_);
-	Matrix(std::initializer_list<std::initializer_list<T>> lst);
+	Matrix(std::initializer_list<std::initializer_list<T>> lst); //+
 	
 	Matrix(const Matrix<T>& other);
 	Matrix<T>& operator=(const Matrix<T>& other);
@@ -29,7 +30,7 @@ public:
 	Matrix<T> product(const Matrix& B) const;
 	Matrix<T> pow(int n) const;
 private:
-	T** data = nullptr;
+	T* data = nullptr;
 	int rows = 0;
 	int cols = 0;
 };
@@ -57,21 +58,18 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
     std::cout << "# Matrix init_lst ctor. " << this << std::endl;
     rows = lst.size();
     cols = lst.begin()->size();
-    data = new T*[rows];
+    data = new T[rows * cols];
     int i = 0;
     for (auto it = lst.begin(), et = lst.end(); it != et; ++it) {
-        data[i] = new T[cols];
-        int j = 0;
         for (auto jt = it->begin(), jte = it->end(); jt != jte; ++jt) {
-            data[i][j++] = *jt;
+           data[i++] = *jt; 
         }
-        i++;
     }
 }
 
 template<typename T>
 void Matrix<T>::loadFile(std::string filename) {
-
+    
 
 }
 
@@ -80,7 +78,7 @@ Matrix<T>::Matrix(const Matrix<T>& other) {
 #ifdef DEBUG
     std::cout << "# Matrix copy ctor. " << this << std::endl;
 #endif
-    copy(other);
+    std::memcpy(data, other.data, other.rows * other.cols * sizeof(T));
 }
 
 template<typename T>
@@ -132,7 +130,7 @@ Matrix<T>::~Matrix() {
 #ifdef DEBUG
     std::cout << "# Matrix dtor  " << this << " data=" << data << std::endl;
 #endif
-    free();
+    delete[] data;    
 }
 
 template<typename T>
@@ -148,6 +146,7 @@ void Matrix<T>::copy(const Matrix<T>& other) {
     }
 }
 
+#if 0
 template<typename T>
 void Matrix<T>::free() {
     for (int i = 0; i < rows; ++i) {
@@ -155,6 +154,7 @@ void Matrix<T>::free() {
     }
     delete[] data;
 }
+#endif
 
 template<typename T>
 void Matrix<T>::output(std::ostream& out) const {

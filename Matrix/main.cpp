@@ -8,10 +8,10 @@
 int main()
 {
     Matrix<float> A = {{1.0, 1.0}, {1.0, 0.0}};
-    std::cout << A.pow(10) << std::endl;
 
 
 #if 0
+    std::cout << A.pow(10) << std::endl;
     std::vector<Matrix<float>> vM;
     vM.push_back(A);
     std::cout << "---" << std::endl;
