@@ -10,7 +10,7 @@ class Matrix {
 public:
 	Matrix();
 	Matrix(int m_, int n_);
-	Matrix(std::initializer_list<std::initializer_list<T>> lst); //+
+	Matrix(std::initializer_list<std::initializer_list<T>> lst); 
 	
 	Matrix(const Matrix<T>& other);
 	Matrix<T>& operator=(const Matrix<T>& other);
