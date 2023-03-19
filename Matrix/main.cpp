@@ -7,9 +7,16 @@
 
 int main()
 {
-    Matrix<float> A = {{1.0, 1.0}, {1.0, 0.0}};
+    Matrix<double> A = {{1.0, 1.0}, {1.0, 0.0}};
+    A.output(std::cout);
+    Matrix<double> E = {{1.0, 0.0}, {0.0, 1.0}};
+    E.output(std::cout);
 
+    Matrix<double> C = A.pow(5);
+    C.output(std::cout);
 #if 0
+    Matrix<double> B = std::move(A);
+    B.output(std::cout);
     std::cout << A.pow(10) << std::endl;
     std::vector<Matrix<float>> vM;
     vM.push_back(A);

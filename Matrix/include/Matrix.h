@@ -12,6 +12,15 @@ public:
 	Matrix(int m_, int n_);
 	Matrix(std::initializer_list<std::initializer_list<T>> lst); 
 	
+	class Row {
+	private:
+		T* row;
+	public:
+		Row(T* row_): row(row_) {}
+		const T& operator[](int i) const { return row[i]; }
+		T& operator[](int i) { return row[i]; }
+	};
+
 	Matrix(const Matrix<T>& other);
 	Matrix<T>& operator=(const Matrix<T>& other);
 	Matrix(Matrix<T>&& other) noexcept;
@@ -24,7 +33,8 @@ public:
 	void free();
 	void copy(const Matrix<T>& rhs);
 
-	T* operator[](int i);
+	Row operator[](int i) { return Row(data + i * rows); }
+	const Row operator[](int i) const { return Row(data + i * rows); }
 
 	T& at(int i, int j);
 	Matrix<T> product(const Matrix& B) const;
@@ -43,14 +53,13 @@ Matrix<T>::Matrix() {
 }
 
 template<typename T>
-Matrix<T>::Matrix(int n_, int m_) {
+Matrix<T>::Matrix(int rows_, int cols_) {
+#ifdef DEBUG
     std::cout << "# Matrix(n, m) ctor. " << this << std::endl;
-    data = new T*[m_];
-    for (int i = 0; i < m_; ++i) {
-        data[i] = new T[n_];
-    }
-    rows = m_;
-    cols = n_;
+#endif
+    rows = rows_;
+    cols = cols_;
+    data = new T[rows * cols];
 }
 
 template<typename T>
@@ -78,7 +87,15 @@ Matrix<T>::Matrix(const Matrix<T>& other) {
 #ifdef DEBUG
     std::cout << "# Matrix copy ctor. " << this << std::endl;
 #endif
-    std::memcpy(data, other.data, other.rows * other.cols * sizeof(T));
+    copy(other);
+}
+
+template<typename T>
+void Matrix<T>::copy(const Matrix<T>& other) {
+    rows = other.rows;
+    cols = other.cols;
+    data = new T[rows * cols];
+    std::copy(other.data, other.data + other.rows * other.cols, data);
 }
 
 template<typename T>
@@ -89,7 +106,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other) {
     if (this == &other) {
         return *this;
     }
-    free();
+    delete[] data;
     copy(other);
     return *this;
 }
@@ -115,7 +132,7 @@ Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other) noexcept {
     if (this == &other) {
         return *this;
     }
-    free();
+    delete[] data;
     data = other.data;
     rows = other.rows;
     cols = other.cols;
@@ -133,19 +150,6 @@ Matrix<T>::~Matrix() {
     delete[] data;    
 }
 
-template<typename T>
-void Matrix<T>::copy(const Matrix<T>& other) {
-    rows = other.rows;
-    cols = other.cols;
-    data = new T*[rows];
-    for (int i = 0; i < rows; ++i) {
-        data[i] = new T[cols];
-        for (int j = 0; j < cols; ++j) {
-            data[i][j] = other.data[i][j];
-        }
-    }
-}
-
 #if 0
 template<typename T>
 void Matrix<T>::free() {
@@ -160,37 +164,32 @@ template<typename T>
 void Matrix<T>::output(std::ostream& out) const {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            out << data[i][j] << " ";
+            out << data[rows * i + j] << " ";
         }
         out << std::endl;
     }
 }
 
-
-
-template<typename T>
-T& Matrix<T>::at(int i, int j) {
-    return data[i][j];
-}
-
+#if 0 
 template<typename T>
 T* Matrix<T>::operator[](int i) {
-    return data[i];
+    return data + i * rows;
 }
-
+#endif
 
 template<typename T>
 Matrix<T> Matrix<T>::product(const Matrix& B) const {
     if (cols != B.rows) {
-        throw std::invalid_argument();
+        throw std::runtime_error("Matrixes have bad sizes");
     }
     Matrix<T> result(rows, B.cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < B.cols; ++j) {
-	    //? is ~T invokes in this cycle?
+			//? is ~T invokes in this cycle?
             T sum{};
             for (int k = 0; k < cols; ++k) {
-                sum += data[i][k]*B.data[k][j];
+				sum += operator[](i)[k] * B[k][j];
+
             }
             result[i][j] = sum;
         }
