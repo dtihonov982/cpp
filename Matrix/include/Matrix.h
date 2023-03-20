@@ -4,45 +4,53 @@
 #include <iostream>
 #include <cstring>
 
-
 template<typename T>
 class Matrix {
 public:
-	Matrix();
-	Matrix(int m_, int n_);
-	Matrix(std::initializer_list<std::initializer_list<T>> lst); 
-	
-	class Row {
-	private:
-		T* row;
-	public:
-		Row(T* row_): row(row_) {}
-		const T& operator[](int i) const { return row[i]; }
-		T& operator[](int i) { return row[i]; }
-	};
+    Matrix();
+    Matrix(int m_, int n_);
+    Matrix(std::initializer_list<std::initializer_list<T>> lst); 
+    Matrix(std::istream& is);
+    
+    class Row {
+    private:
+        T* row;
+    public:
+        Row(T* row_): row(row_) {}
+        const T& operator[](int i) const { return row[i]; }
+        T& operator[](int i) { return row[i]; }
+    };
 
-	Matrix(const Matrix<T>& other);
-	Matrix<T>& operator=(const Matrix<T>& other);
-	Matrix(Matrix<T>&& other) noexcept;
-	Matrix<T>& operator=(Matrix<T>&& other) noexcept;
-	~Matrix();
-	
-	void output(std::ostream& out) const;
-	void loadFile(std::string filename);
-	
-	void free();
-	void copy(const Matrix<T>& rhs);
+    
+    class iterator {
+        T* ptr;
+    public:
+        T& operator++();
+        T operator++(int);
+    };
 
-	Row operator[](int i) { return Row(data + i * rows); }
-	const Row operator[](int i) const { return Row(data + i * rows); }
+    Matrix(const Matrix<T>& other);
+    Matrix<T>& operator=(const Matrix<T>& other);
+    Matrix(Matrix<T>&& other) noexcept;
+    Matrix<T>& operator=(Matrix<T>&& other) noexcept;
+    ~Matrix();
+    
+    void output(std::ostream& out) const;
+    
+    void free();
+    void copy(const Matrix<T>& rhs);
 
-	T& at(int i, int j);
-	Matrix<T> product(const Matrix& B) const;
-	Matrix<T> pow(int n) const;
+    Row operator[](int i) { return Row(data + i * cols); }
+    const Row operator[](int i) const { return Row(data + i * cols); }
+    Matrix<T> product(const T& x) const; 
+
+    T& at(int i, int j);
+    Matrix<T> product(const Matrix<T>& B) const;
+    Matrix<T> pow(int n) const;
 private:
-	T* data = nullptr;
-	int rows = 0;
-	int cols = 0;
+    T* data = nullptr;
+    int rows = 0;
+    int cols = 0;
 };
 
 template<typename T>
@@ -64,7 +72,9 @@ Matrix<T>::Matrix(int rows_, int cols_) {
 
 template<typename T>
 Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
+#ifdef DEBUG
     std::cout << "# Matrix init_lst ctor. " << this << std::endl;
+#endif
     rows = lst.size();
     cols = lst.begin()->size();
     data = new T[rows * cols];
@@ -77,9 +87,13 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
 }
 
 template<typename T>
-void Matrix<T>::loadFile(std::string filename) {
-    
-
+Matrix<T>::Matrix(std::istream& is) {
+    is >> rows;
+    is >> cols;
+    data = new T[rows * cols];
+    for (int i = 0; i < rows * cols; ++i) {
+        is >> data[i];
+    }
 }
 
 template<typename T>
@@ -162,9 +176,10 @@ void Matrix<T>::free() {
 
 template<typename T>
 void Matrix<T>::output(std::ostream& out) const {
+    out << rows << ' ' << cols << std::endl;
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            out << data[rows * i + j] << " ";
+            out << data[cols * i + j] << " ";
         }
         out << std::endl;
     }
@@ -180,15 +195,15 @@ T* Matrix<T>::operator[](int i) {
 template<typename T>
 Matrix<T> Matrix<T>::product(const Matrix& B) const {
     if (cols != B.rows) {
-        throw std::runtime_error("Matrixes have bad sizes");
+        throw std::runtime_error("Shapes of matrixes are incorrect for multiplication.");
     }
     Matrix<T> result(rows, B.cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < B.cols; ++j) {
-			//? is ~T invokes in this cycle?
+            //? is ~T invokes in this cycle?
             T sum{};
             for (int k = 0; k < cols; ++k) {
-				sum += operator[](i)[k] * B[k][j];
+                sum += operator[](i)[k] * B[k][j];
 
             }
             result[i][j] = sum;
@@ -215,6 +230,40 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& M) {
     M.output(os);
     return os;
 }
+
+template<typename T>
+Matrix<T> Matrix<T>::product(const T& x) const {
+    Matrix<T> result{*this};
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            result[i][j] *= x;
+        }
+    }
+    return result;
+}
+
+template<typename T>
+Matrix<T> operator*(const T& number, const Matrix<T>& matrix) {
+    return matrix.product(number);
+}
+
+template<typename T>
+Matrix<T> operator*(const Matrix<T>& matrix, const T& number) {
+    return matrix.product(number);
+}
+
+/*
+template<typename T>
+void fillRand(int start, end int) {
+    std::srand(std::time(NULL));
+    for (int i = 0; i < 
+*/
+
+
+
+
+
+
 
 
 #endif

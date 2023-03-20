@@ -2,11 +2,19 @@
 #include "Matrix.h"
 #include <vector>
 #include <utility>
-
+#include <fstream>
 
 
 int main()
 {
+    std::ifstream isA{"test2A.m"};
+    Matrix<float> A{isA};
+    std::ifstream isB{"test2B.m"};
+    Matrix<float> B{isB};
+    Matrix<float> C = 3.0f * A;
+    //std::ofstream os("test2C.m");
+    C.output(std::cout);
+#if 0
     Matrix<double> A = {{1.0, 1.0}, {1.0, 0.0}};
     A.output(std::cout);
     Matrix<double> E = {{1.0, 0.0}, {0.0, 1.0}};
@@ -14,7 +22,6 @@ int main()
 
     Matrix<double> C = A.pow(5);
     C.output(std::cout);
-#if 0
     Matrix<double> B = std::move(A);
     B.output(std::cout);
     std::cout << A.pow(10) << std::endl;
