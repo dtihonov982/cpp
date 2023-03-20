@@ -47,6 +47,7 @@ public:
     T& at(int i, int j);
     Matrix<T> product(const Matrix<T>& B) const;
     Matrix<T> pow(int n) const;
+    Matrix<T> minorMatrix(int exRow, int exCol);
 private:
     T* data = nullptr;
     int rows = 0;
@@ -257,9 +258,29 @@ template<typename T>
 void fillRand(int start, end int) {
     std::srand(std::time(NULL));
     for (int i = 0; i < 
+
+template<typename T>
+T Matrix<T>::det() const {
+}
 */
 
-
+template<typename T>
+Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) {
+    if (exRow > rows || exCol > cols) {
+        throw std::runtime_error{"Out of range"}; 
+    }
+    Matrix<T> result(rows - 1, cols - 1);
+    for (int isrc = 0, idst = 0; isrc < rows; ++isrc) {
+        if (isrc == exRow) continue;
+        for (int jsrc = 0, jdst = 0; jsrc < cols; ++jsrc) {
+            if (jsrc == exCol) continue;
+            result[idst][jdst] = operator[](isrc)[jsrc];
+            ++jdst;
+        }
+        ++idst;
+    }
+    return result;
+}
 
 
 
