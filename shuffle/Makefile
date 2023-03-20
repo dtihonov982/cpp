@@ -1,0 +1,5 @@
+CC=g++
+CFLAGS=-g -O0 -DDEBUG
+
+main: main.cpp 
+	$(CC) main.cpp $(CFLAGS)
