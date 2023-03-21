@@ -26,14 +26,7 @@ void printMap(const M& map) {
 template<typename T>
 std::map<T, int> countElem(const std::vector<T>& vect) {
     std::map<T, int> result;
-    for (const auto& e: vect) {
-        if (result[e] != 0) {
-            result[e]++;
-        }
-        else {
-            result[e] = 1;
-        }
-    }
+    for (const auto& e: vect) result[e]++;
     return result;
 }
         
@@ -65,8 +58,6 @@ std::vector<T> shuffle(const std::vector<T>& vect) {
     }
     return result;
 }
-
-
 
 int main() {
     std::vector<int> a = {/*2, 0, 0, 3, 2, 0, 2, 3, 15, 40, 40, 1, 2, 3, 3*/};
