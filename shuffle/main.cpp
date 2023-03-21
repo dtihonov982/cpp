@@ -69,10 +69,11 @@ std::vector<T> shuffle(const std::vector<T>& vect) {
 
 
 int main() {
-    std::vector<int> a = {1, 2, 3, 3};
+    std::vector<int> a = {/*2, 0, 0, 3, 2, 0, 2, 3, 15, 40, 40, 1, 2, 3, 3*/};
     print(a);
     std::vector<int> randA = shuffle<int>(a);
     print(randA);
+    std::cout << std::boolalpha << areEquivalent(a, randA) << std::endl;
     #if 0
     std::vector<int> b = {2, 1, 3};
     std::cout << std::boolalpha << areEquivalent<int>(a, b) << std::endl;
