@@ -48,6 +48,7 @@ public:
     Matrix<T> product(const Matrix<T>& B) const;
     Matrix<T> pow(int n) const;
     Matrix<T> minorMatrix(int exRow, int exCol);
+    T det() const;
 private:
     T* data = nullptr;
     int rows = 0;
@@ -281,6 +282,24 @@ Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) {
     }
     return result;
 }
+
+template<typename T>
+T det() {
+    if (rows != cols) {
+        throw "Matrix is not square matrix.";
+    }
+    if (rows == 1 && cols == 1) {
+        return operator[](0)[0];
+    }
+    T result{};
+    for (int j = 0, sign = -1; j < cols; ++j) {
+        minor = minorMatrix(0, j);
+        sign *= -1;
+        result += sign * operator[](0)[j] * minor.det();
+    }
+    return result;
+}
+
 
 
 
