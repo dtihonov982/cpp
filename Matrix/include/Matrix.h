@@ -47,7 +47,7 @@ public:
     T& at(int i, int j);
     Matrix<T> product(const Matrix<T>& B) const;
     Matrix<T> pow(int n) const;
-    Matrix<T> minorMatrix(int exRow, int exCol);
+    Matrix<T> minorMatrix(int exRow, int exCol) const;
     T det() const;
 private:
     T* data = nullptr;
@@ -266,7 +266,7 @@ T Matrix<T>::det() const {
 */
 
 template<typename T>
-Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) {
+Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) const {
     if (exRow > rows || exCol > cols) {
         throw std::runtime_error{"Out of range"}; 
     }
@@ -284,7 +284,7 @@ Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) {
 }
 
 template<typename T>
-T det() {
+T Matrix<T>::det() const {
     if (rows != cols) {
         throw "Matrix is not square matrix.";
     }
@@ -293,7 +293,7 @@ T det() {
     }
     T result{};
     for (int j = 0, sign = -1; j < cols; ++j) {
-        minor = minorMatrix(0, j);
+        Matrix<T> minor = minorMatrix(0, j);
         sign *= -1;
         result += sign * operator[](0)[j] * minor.det();
     }

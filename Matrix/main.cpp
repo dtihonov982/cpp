@@ -9,10 +9,11 @@ int main()
 {
     std::ifstream isA{"3x3.m"};
     Matrix<float> A{isA};
+    std::cout << A.det() << std::endl;
+#if 0
     A.output(std::cout);
     Matrix<float> B{A.minorMatrix(0, 0)};
     B.output(std::cout);
-#if 0
     Matrix<double> A = {{1.0, 1.0}, {1.0, 0.0}};
     A.output(std::cout);
     Matrix<double> E = {{1.0, 0.0}, {0.0, 1.0}};
