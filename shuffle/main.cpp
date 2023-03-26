@@ -42,34 +42,52 @@ template<typename T>
 std::vector<T> shuffle(const std::vector<T>& vect) {
     std::vector<T> result(vect.size());
 
-    std::vector<int> targetIndexes(vect.size());
-    for (int i = 0; i < targetIndexes.size(); ++i) targetIndexes[i] = i;
-
+    int sizeOfIndArr = vect.size();
+    std::vector<int> targetIndexes(sizeOfIndArr);
+    for (int i = 0; i < sizeOfIndArr; ++i) targetIndexes[i] = i;
+    
     std::srand(std::time(NULL));
     for (const auto& e: vect) {
-        assert(targetIndexes.size() > 0);
+        assert(sizeOfIndArr > 0);
 
-        int randKey = std::rand() % targetIndexes.size();
+        int randKey = std::rand() % sizeOfIndArr;
         int targetIndex = targetIndexes[randKey];
         result[targetIndex] = e;
 
-        //todo: divide vector on 2 parts and swap elements between them.
-        targetIndexes.erase(targetIndexes.begin() + randKey);
+        //Target indexes array divides on 2 parts. Left hold not picked indexes, right holds picked indexes.
+        std::swap(targetIndexes[randKey], targetIndexes[--sizeOfIndArr]);
     }
     return result;
 }
 
+std::vector<int> getRandVector(int maxValue, int maxSize, bool fixedSize = false) {
+    std::srand(std::time(NULL));
+    int size;
+    if (fixedSize) {
+        size = maxSize;
+    }
+    else {
+        size  = std::rand() % (maxSize + 1);
+    }
+    std::vector<int> res(size);
+    for (int i = 0; i < size; ++i) {
+        res[i] = std::rand() % (maxValue + 1);
+    }
+    return res;
+}
+
 int main() {
-    std::vector<int> a = {/*2, 0, 0, 3, 2, 0, 2, 3, 15, 40, 40, 1, 2, 3, 3*/};
-    print(a);
+    std::vector<int> a = getRandVector(30, 30, true);
+    print<std::vector<int>>(a);
     std::vector<int> randA = shuffle<int>(a);
-    print(randA);
+    print<std::vector<int>>(randA);
     std::cout << std::boolalpha << areEquivalent(a, randA) << std::endl;
     #if 0
+    std::vector<int> a = {2, 0, 0, 3, 2, 0, 2, 3, 15, 40, 40, 1, 2, 3, 3};
     std::vector<int> b = {2, 1, 3};
     std::cout << std::boolalpha << areEquivalent<int>(a, b) << std::endl;
     auto m = countElem<int>(a);
-    printMap<std::map<int, int>>(m);
+    printMap<std::map<int, int>>(countElem<int>(a));
     #endif
 
     return 0;
