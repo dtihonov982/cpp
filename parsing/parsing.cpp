@@ -34,6 +34,9 @@ std::ostream& operator<<(std::ostream& os, WordType type) {
     return os;
 }
 
+
+
+
 #if 0
 class Word {
 public:
@@ -187,6 +190,10 @@ private:
 std::vector<std::regex> TokenMaker::res = {std::regex("^\\d+"), std::regex("^[\\+\\-\\*/]"), std::regex("^\\("), std::regex("^\\)"), std::regex("^\\w+"), std::regex("^\\[\\w+\\]")};
 std::vector<WordType> TokenMaker::types = { WordType::number, WordType::op, WordType::LPar, WordType::RPar, WordType::func, WordType::ref};
 
+int getOpPrecedence(const Token& opToken) {
+    static std::map<std::string, int> operators { {"+", 2}, {"-", 2}, {"*", 3}, {"/", 3} };
+    return operators[opToken.str];
+}
 
 #if 0
 std::vector<Token> tokenize(const std::string& input) {

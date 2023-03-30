@@ -8,4 +8,5 @@
 *.dll
 *.out
 *.swp
+*.sh
 *.log
