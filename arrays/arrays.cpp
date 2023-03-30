@@ -77,18 +77,3 @@ bool is_equal(int A[], int B[], int length) {
     return true;
 }
 
-std::vector<int> getRandVector(int maxValue, int maxSize, bool fixedSize) {
-    std::srand(std::time(NULL));
-    int size;
-    if (fixedSize) {
-        size = maxSize;
-    }
-    else {
-        size  = std::rand() % (maxSize + 1);
-    }
-    std::vector<int> res(size);
-    for (int i = 0; i < size; ++i) {
-        res[i] = std::rand() % (maxValue + 1);
-    }
-    return res;
-}

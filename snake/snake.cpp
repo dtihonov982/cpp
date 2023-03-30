@@ -2,11 +2,11 @@
 
 
 #include <iostream>
-#include <conio.h>
-#include <windows.h>
 #include <vector>
 #include <ctime>
-//using namespace std;
+#include <chrono>
+#include <thread>
+
 bool gameOver;
 
 const int width = 20;
@@ -221,7 +221,8 @@ int main()
         Draw();
         Input();
         Logic();
-        Sleep(10); //sleep(10);
+        //Sleep(10); //sleep(10);
+        std::thread::sleep_for(std::chrono::milliseconds(10));
     }
     return 0;
 }
