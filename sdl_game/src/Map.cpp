@@ -1,12 +1,31 @@
 #include "Map.h"
 #include "TextureManager.h"
-#include <algorithm>
 #include <fstream>
 #include <sstream>
 
-//0 w 1 g 2 d
+
+Map::Map()
+{
+
+}
+
+Map::~Map() {
+
+}
+
+void Map::loadMap(const std::string& path) {
+    std::ifstream is(path);
+    std::string line;
+    for (int i = 0; std::getline(is, line); ++i) {
+        std::istringstream ss(line);
+        for (int j = 0, tmp; ss >> tmp; ++j) {       
+            Game::addTile(tmp, j* 32, i * 32);
+        }
+    }
+}
 
 
+/*
 Map::Map()
 {
     //An order of pushing is important.
@@ -27,11 +46,10 @@ Map::Map()
 }
 
 Map::~Map() {
-    for (auto& ptr: textures) {
+    for (auto ptr: textures) {
         SDL_DestroyTexture(ptr);
     }
 }
-
 void Map::loadMap(const table& map_) {
     rows = map_.size();
     columns = map_[0].size();
@@ -65,4 +83,5 @@ void Map::drawMap() {
         }
     }
 }
+*/
 

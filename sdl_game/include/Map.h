@@ -1,26 +1,27 @@
 #ifndef MAP_H
 #define MAP_H
 #include "Game.h"
-#include <vector>
-
-using table = std::vector<std::vector<int>>;
+#include <string>
 
 class Map
 {
 public:
     Map();
     ~Map();
-    void loadMap(const std::vector<std::vector<int>>& map_);
-    void loadFile(const std::string& path);
-    void drawMap();
+    static void loadMap(const std::string& path);
+    //void loadFile(const std::string& path);
+    //void drawMap();
 
 private:
+/*
     SDL_Rect src, dst;
     std::vector<SDL_Texture*> textures;
+
 
     int columns = 0;
     int rows = 0;
     table map;
+    */
 };
 
 #endif // MAP_H

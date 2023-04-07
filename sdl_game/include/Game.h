@@ -1,9 +1,12 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_image.h"
 #include <iostream>
+#include <vector>
+
+class Collider;
 
 class Game
 {
@@ -19,6 +22,9 @@ public:
     void clean();
     bool running() {return isRunning;}
     static SDL_Renderer* renderer;
+    static SDL_Event event;
+    static std::vector<Collider*> colliders;
+    static void addTile(int id, int x, int y);
 private:
     int cnt = 0;
     bool isRunning = false;
