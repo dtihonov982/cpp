@@ -15,24 +15,31 @@ static std::unordered_map<int, std::string> tileSprites = {
 
 class TileComponent: public Component {
 public:
-	TransformComponent* transform;
-	SpriteComponent* sprite;
-	
-	SDL_Rect tileRect;
-	int id;
+	SDL_Texture* texture;
+	SDL_Rect srcR, dstR;
 	
 	TileComponent() = default;
-	TileComponent(int x, int y, int w, int h, int id_) {
-		tileRect = {x, y, w, h};
-		id = id_;
+	TileComponent(int srcX, int srcY, int dstX, int dstY, const char* path) {
+		texture = TextureManager::LoadTexture(path);
+		srcR = {srcX, srcY, 32, 32};
+		dstR = {dstX, dstY, 64, 64};
+	}
+	~TileComponent() {
+		SDL_DestroyTexture(texture);
 	}
 	
+	void draw() override {
+		TextureManager::Draw(texture, srcR, dstR);
+	}
+	
+	/*
 	void init() {
 		transform = &entity->addComponent<TransformComponent>(tileRect.x, tileRect.y, tileRect.w, tileRect.h, 1);
 		if (auto it = tileSprites.find(id); it != tileSprites.end()) {
 			sprite = &entity->addComponent<SpriteComponent>(it->second.c_str());
 		}
 	}
+	*/
 };
 	
 

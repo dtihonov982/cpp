@@ -9,9 +9,9 @@ public:
 	Vector2D position;
 	Vector2D velocity;
 	float speed = 3.0f;
-	int height = 87;
-	int width = 68;
-	int scale = 1;
+	int height = 32;
+	int width = 32;
+	int scale = 3;
 
 	//todo: is really need to call default ctor of position&
     TransformComponent(): position() {

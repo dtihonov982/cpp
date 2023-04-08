@@ -4,14 +4,22 @@
 #include "ECS/Components.h"
 #include "Vector2D.h"
 #include "Collision.h"
+#include "future"
 
-Map* map;
+//Map* map;
 
 SDL_Renderer* Game::renderer = nullptr;
 SDL_Event Game::event;
 Manager manager;
 Entity& player = manager.addEntity();
 Entity& wall = manager.addEntity();
+
+enum GroupLabels: std::size_t {
+	groupMap,
+	groupPlayers,
+	groupEnemies,
+	groupColliders
+};
 
 std::vector<Collider*> Game::colliders;
 
@@ -34,22 +42,18 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
         isRunning = true;
     }
     
-    player.addComponent<TransformComponent>();
-    player.addComponent<SpriteComponent>("assets/player.png");
+    player.addComponent<TransformComponent>(0, 0, 32, 32, 4);
+    player.addComponent<SpriteComponent>("assets/player_anims.png", true);
     player.addComponent<KeyboardController>();
     player.addComponent<Collider>("player");
+    player.addGroup(groupPlayers);
     
-    wall.addComponent<TransformComponent>(300.0f, 300.0f, 20, 200, 1);
-    wall.addComponent<SpriteComponent>("assets/dirt.png");
-    wall.addComponent<Collider>("wall");
-    
-	Map::loadMap("assets/lvl1.txt");
+	Map::loadMap("assets/map.map");
 
 
 }
 
 void Game::handleEvents() {
-    
     SDL_PollEvent(&event);
     switch(event.type) {
     case SDL_QUIT:
@@ -66,12 +70,22 @@ void Game::update() {
     for (auto coll: colliders) {
     	if (coll != &playerCollider && Collision::AABB(*coll, playerCollider)) {
     		std::cout << playerCollider.tag << " hit " << coll->tag << std::endl;
+    		//std::async([a = playerCollider.tag, b = coll->tag] { std::cout << a << " hit " << b << std::endl; } );
     	}
     }
 }
+
+std::vector<Entity*>& tiles = manager.getGroup(groupMap);
+std::vector<Entity*>& players = manager.getGroup(groupPlayers);
+std::vector<Entity*>& enemies = manager.getGroup(groupEnemies);
+
 void Game::render() {
     SDL_RenderClear(renderer);
-    manager.draw();
+    
+    auto drawEntity = [] (Entity* e) { e->draw(); };
+    std::for_each(tiles.begin(), tiles.end(), drawEntity);
+    std::for_each(players.begin(), players.end(), drawEntity);
+    std::for_each(enemies.begin(), enemies.end(), drawEntity); 
     SDL_RenderPresent(renderer);
 }
 void Game::clean() {
@@ -81,9 +95,9 @@ void Game::clean() {
     std::cout << "Game cleaned." << std::endl;
 }
 
-void Game::addTile(int id, int x, int y) {
+void Game::addTile(int srcX, int srcY, int dstX, int dstY) {
 	Entity& tile = manager.addEntity();
-	tile.addComponent<TileComponent>(x, y, 32, 32, id);
-	
+	tile.addComponent<TileComponent>(srcX, srcY, dstX, dstY, "assets/terrain_ss.png");
+	tile.addGroup(groupMap);
 }
 

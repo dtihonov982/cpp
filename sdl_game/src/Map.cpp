@@ -19,7 +19,7 @@ void Map::loadMap(const std::string& path) {
     for (int i = 0; std::getline(is, line); ++i) {
         std::istringstream ss(line);
         for (int j = 0, tmp; ss >> tmp; ++j) {       
-            Game::addTile(tmp, j* 32, i * 32);
+            Game::addTile((tmp % 10) * 32, (tmp / 10) * 32, j * 64, i * 64);
         }
     }
 }
