@@ -19,25 +19,11 @@ void init_rand(int A[], const int length, int maxValue);
 void swap_elements(int& a, int& b);
 void init_descending(int A[], const int length);
 bool is_equal(int A[], int B[], int length);
+void insertion_sort(std::vector<int>& A);
 
 enum class RandGenerationMode { fixedSize, randSize };
-//std::vector<int> getRandVector(int maxValue, int maxSize, RandGenerationMode mode = RandGenerationMode::fixedSize);
+std::vector<int> getRandVector(int maxValue, int maxSize, RandGenerationMode mode = RandGenerationMode::fixedSize);
 
-std::vector<int> getRandVector(int maxValue, int maxSize, RandGenerationMode mode) {
-    std::srand(std::time(NULL));
-    int size;
-    if (mode == RandGenerationMode::fixedSize) {
-        size = maxSize;
-    }
-    else {
-        size  = std::rand() % (maxSize + 1);
-    }
-    std::vector<int> res(size);
-    for (int i = 0; i < size; ++i) {
-        res[i] = std::rand() % (maxValue + 1);
-    }
-    return res;
-}
 
 template<typename T, typename It>
 It middle(It begin, It end) {

@@ -77,3 +77,31 @@ bool is_equal(int A[], int B[], int length) {
     return true;
 }
 
+void insertion_sort(std::vector<int>& A) {
+    if (A.empty())
+        return;
+    for (int j = 1; j < A.size(); ++j) {
+        int tmp = A[j];
+        int i = j - 1;
+        while (i >= 0 && A[i] > tmp) {
+            A[i + 1] = A[i];
+            --i;
+        }
+        A[i + 1] = tmp;
+    }
+}
+std::vector<int> getRandVector(int maxValue, int maxSize, RandGenerationMode mode) {
+    std::srand(std::time(NULL));
+    int size;
+    if (mode == RandGenerationMode::fixedSize) {
+        size = maxSize;
+    }
+    else {
+        size  = std::rand() % (maxSize + 1);
+    }
+    std::vector<int> res(size);
+    for (int i = 0; i < size; ++i) {
+        res[i] = std::rand() % (maxValue + 1);
+    }
+    return res;
+}

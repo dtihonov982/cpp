@@ -7,220 +7,148 @@
 #include <map>
 #include <exception>
 #include <algorithm>
-
-enum class WordType { op, func, number, LPar, RPar, ref };
-
-std::ostream& operator<<(std::ostream& os, WordType type) {
-    switch (type) {
-    case WordType::op:
-        os << "operator";
-        break;
-    case WordType::func:
-        os << "function";
-        break;
-    case WordType::number:
-        os << "number";
-        break;
-    case WordType::LPar:
-        os << "left parenthesis";
-        break;
-    case WordType::RPar:
-        os << "right parenthesis";
-        break;
-    case WordType::ref:
-        os << "reference";
-        break;
-    }
-    return os;
-}
+#include <cassert>
+#include "Token.h"
 
 
-
-
-#if 0
+//todo: rename ExpressionPart
 class Word {
 public:
+    Word(WordType type_): type(type_) {}
     WordType getType() { return type; }
-    virtual ~Word();
+    virtual ~Word() {}
 private:
     WordType type;
 };
 
-class Operator: public Word {
-public:
-    Operator(const Token& token_, int precedence_): type(WordType::op), token(token_), precedence(precedence_) {}
-    int getPrecedence() { return precedence; }
-private:
-    int precedence;
-    Token token;
-};
+using ExprPart = Word;
 
 class Number: public Word {
 public:
-    Number(const Token& token): type(WordType::number) {
-        value = std::stoi(token);
+    Number(const Token& token): Word(WordType::number) {
+        value = std::stoi(token.str);
     }
-    int getValue() { return value; }
+    //todo: how to make this constructor without double base ctor calling
+    Number(int n): Word(WordType::number), value(n) {}
+    int getValue() const { return value; }
 private:
     int value;
 };
 
+class Operator: public Word {
+public:
+    Operator(const Token& token_, int precedence_): Word(WordType::op), token(token_), precedence(precedence_) {}
+    int getPrecedence() { return precedence; }
+
+    Number eval(const Number& first, const Number& second) {
+        int x = first.getValue();
+        int y = second.getValue();
+        int result;
+        if (token.str == "+") {
+            result = add(x, y);
+        }
+        if (token.str == "-") {
+            result = sub(x, y);
+        }
+        if (token.str == "*") {
+            result = mult(x, y);
+        }
+        if (token.str == "/") {
+            result = div(x, y);
+        }
+        return Number{result};
+    }
+
+
+private:
+    int precedence;
+    Token token;
+
+    static inline int add(int x, int y) { return x + y; }
+    static inline int sub(int x, int y) { return x - y; }
+    static inline int mult(int x, int y) { return x * y; }
+    static inline int div(int x, int y) { return x / y; }
+};
+
 class LPar: public Word {
 public:
-    LPar(): type(WordType::LPar) {}
+    LPar(): Word(WordType::LPar) {}
 };
 
 class RPar: public Word {
 public:
-    RPar(): type(WordType::RPar) {}
+    RPar(): Word(WordType::RPar) {}
 };
 
 class WordFactory {
 public:
     static Word* makeWord(const Token& token) {
-        if (auto op = operators.find(token); token != operators.end()) {
-            return new Operator{op->first, op->second};
-        }
-        else if (token == "(") {
-            return new LPar{};
-        }
-        else if (token == ")") {
-            return new RPar{};
-        }
-        else {
-            return new Number{token};
-        }
-    }
-private:
-    std::map<Token, int> operators = { {"+", 2}, {"-", 2}, {"*", 3}, {"/", 3} };
-};
-
-std::queue<Word*> getRPN(const std::vector<Token>& input) {
-    std::queue<Word*> output;
-    std::stack<Word*> opStack;
-    for (const Token& token: input) {
-        Word* currWord = WordFactory::makeWord(token);
-        switch (currWord::getType()) {
-
+        Word* result;
+        switch (token.type) {
         case WordType::number:
-            output.push_back(currWord);
+            result = new Number{token};
             break;
-
         case WordType::op:
-            while (!opStack.empty()) {
-                Word* topWord = opStack.top();
-                if (topWord->getType() != WordType::Lpar && topWord->getPrecedence() >= currWord->getPrecedence()) {
-                    output.push_back(topWord);
-                    opStack.pop();
-                }
-                else {
-                    break;
-                }
-            }
-            opStack.push(currWord);
+            result = new Operator{token, getOpPrecedence(token)};
             break;
-
         case WordType::LPar:
-            opStack.push(currWord);
+            result = new LPar{};
             break;
-
         case WordType::RPar:
-            while (!opStack.empty() && OpStack.top()->getType() != WordType::LPar) {
-                output.push_back(opStack.top());
-                opStack.pop();
-            }
-            if (opStack.top() == WordType::LPar) {
-                opStack.pop();
-            }
+            result = new RPar{};
             break;
         }
+        return result;
     }
-    while (!opStack.empty()) {
-        output.push_back(opStack.top()); opStack.pop();
-    }
-    return output;
-}
-#endif
 
-struct Token {
-	std::string str;
-	WordType type;
+    
+    static std::vector<Word*> convertToWords(const std::vector<Token>& input) {
+        std::vector<Word*> result;
+        for (const Token& token: input) {
+            result.push_back(makeWord(token));
+        }
+        return result;
+    }
 };
 
-std::ostream& operator<<(std::ostream& os, const Token& token) {
-    os << token.str << " " << token.type;
-    return os;
-}
-
-class TokenMaker {
+class Processor {
 public:
-    static std::vector<Token> tokenize(std::string input) {
-        input.erase(std::remove_if(input.begin(), input.end(), [] (char x) { return x == ' '; }), input.end());
-    	std::vector<Token> result;
-        while (!input.empty()) {
-            Token currToken;
-            if (getTokenFromBegin(input, currToken)) {
-                result.push_back(currToken);
-                int lenToErase = currToken.str.size();
-                input.erase(0, lenToErase);
+    static Number* eval(const std::vector<Word*>& rpnExpression) {
+        if (rpnExpression.empty()) {
+            return nullptr;
+       }
+       std::stack<Word*> Stack;
+       for (auto exprPart: rpnExpression) {
+            if (exprPart->getType() == WordType::number) {
+                Stack.push(exprPart);
             }
-            else {
-                throw std::runtime_error("Can't recognize: \"" + input + "\"");
+            //todo: memory lost
+            else if (exprPart->getType() == WordType::op) {
+                assert(!Stack.empty());
+                Number* secondArg = static_cast<Number*>(Stack.top()); Stack.pop();
+                Number* firstArg = static_cast<Number*>(Stack.top()); Stack.pop();
+                Operator* op = static_cast<Operator*>(exprPart);
+                Number result = op->eval(*firstArg, *secondArg); 
+                Stack.push(new Number{result});
             }
-        }
-    	return result;
+       }
+       return static_cast<Number*>(Stack.top()); 
     }
-
-    static bool getTokenFromBegin(const std::string& input, Token& output) {
-        std::smatch matches;
-        for (int i = 0; i < res.size(); ++i) {
-            if (std::regex_search(input, matches, res[i])) {
-                output = {matches[0], types[i]};
-                return true;
-            }
-        }
-        return false;
-    }
-            
-private:
-    static std::vector<std::regex> res;
-    static std::vector<WordType> types;
 };
-
-std::vector<std::regex> TokenMaker::res = {std::regex("^\\d+"), std::regex("^[\\+\\-\\*/]"), std::regex("^\\("), std::regex("^\\)"), std::regex("^\\w+"), std::regex("^\\[\\w+\\]")};
-std::vector<WordType> TokenMaker::types = { WordType::number, WordType::op, WordType::LPar, WordType::RPar, WordType::func, WordType::ref};
-
-int getOpPrecedence(const Token& opToken) {
-    static std::map<std::string, int> operators { {"+", 2}, {"-", 2}, {"*", 3}, {"/", 3} };
-    return operators[opToken.str];
-}
-
-#if 0
-std::vector<Token> tokenize(const std::string& input) {
-    std::istringstream iss{input};
-    std::string tmp;
-    std::vector<std::string> result;
-    while (std::getline(iss, tmp, ' ')) {
-        result.push_back(tmp);
-    }
-    return result;
-}
-#endif
 
 int main() {
     std::string input;
     std::getline(std::cin, input);
-    for (Token& token: TokenMaker::tokenize(input) ) {
-        std::cout << token << std::endl;
-    }
-    #if 0
-    auto tokens = tokenize(input);
-    for (auto x: tokens) {
-        std::cout << "{" << x << "}, ";
+    std::vector<Token> tokens = TokenMaker::tokenize(input); 
+    std::vector<Token> rpn = getRPN(tokens);
+    for (Token& token:  rpn) {
+        std::cout << token.str;
     }
     std::cout << std::endl;
-    //std::queue<Word*> rpn = getRPN(input);
-    #endif
+    std::vector<ExprPart*> words = WordFactory::convertToWords(rpn);
+    Number* result = Processor::eval(words);
+    if (result)
+        std::cout << input << " = " << result->getValue() << std::endl;
 
     return 0;
 }
