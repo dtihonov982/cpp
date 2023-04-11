@@ -41,7 +41,7 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
         }
         isRunning = true;
     }
-    
+    getComponentTypeID<Collider>();
     player.addComponent<TransformComponent>(0, 0, 32, 32, 4);
     player.addComponent<SpriteComponent>("assets/player_anims.png", true);
     player.addComponent<KeyboardController>();

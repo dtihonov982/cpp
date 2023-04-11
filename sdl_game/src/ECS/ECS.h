@@ -41,8 +41,6 @@ public:
     virtual ~Component() {};
 };
 
-
-
 class Entity {
 private:
 	Manager* managerPtr = nullptr;
@@ -75,10 +73,10 @@ public:
     //???
     template<typename T, typename... TArgs>
     T& addComponent(TArgs&&... mArgs) {
-        T* c(new T(std::forward<TArgs>(mArgs)...));
+        T* c = new T(std::forward<TArgs>(mArgs)...);
         c->entity = this;
-        std::unique_ptr<Component> uPtr(c);
-        components.emplace_back(std::move(uPtr));
+        std::unique_ptr<Component> uPtr{c};
+        components.push_back(std::move(uPtr));
 
         componentArray[getComponentTypeID<T>()] = c;
         componentBitSet[getComponentTypeID<T>()] = true;
