@@ -7,29 +7,14 @@
 #include <algorithm>
 #include <bitset>
 #include <array>
+#include "../PolyIndex.h"
+#include <unordered_set>
 
 class Component;
 class Entity;
 class Manager;
 
-using ComponentID = std::size_t;
-using Group = std::size_t;
-
-inline ComponentID getComponentTypeID() {
-    static ComponentID lastID = 0;
-    return lastID++;
-}
-
-template<typename T> inline ComponentID getComponentTypeID() noexcept {
-    static ComponentID typeID = getComponentTypeID();
-    return typeID;
-}
-
 constexpr std::size_t maxComponent = 32;
-constexpr std::size_t maxGroups = 32;
-using ComponentBitSet = std::bitset<maxComponent>;
-using GroupBitSet = std::bitset<maxGroups>;
-using ComponentArray = std::array<Component*, maxComponent>;
 
 class Component {
 public:
@@ -45,11 +30,9 @@ class Entity {
 private:
 	Manager* managerPtr = nullptr;
     bool active = true;
-    std::vector<std::unique_ptr<Component>> components;
+    std::vector<std::shared_ptr<Component>> components;
 
-    ComponentArray componentArray;
-    ComponentBitSet componentBitSet;
-    GroupBitSet groupBitset;
+    PolyIndex<Component, maxComponent> index;
 public:
 	Entity(Manager* manager): managerPtr(manager) {}
 	Entity() {}
@@ -67,7 +50,7 @@ public:
 
     template<typename T>
     bool hasComponent() const {
-        return componentBitSet[getComponentTypeID<T>()];
+        return index.has<T>();
     }
 
     //???
@@ -75,82 +58,86 @@ public:
     T& addComponent(TArgs&&... mArgs) {
         T* c = new T(std::forward<TArgs>(mArgs)...);
         c->entity = this;
-        std::unique_ptr<Component> uPtr{c};
+
+        std::shared_ptr<Component> uPtr{c};
         components.push_back(std::move(uPtr));
 
-        componentArray[getComponentTypeID<T>()] = c;
-        componentBitSet[getComponentTypeID<T>()] = true;
+        index.add<T>(*c);
 
         c->init();
 
         return *c;
     }
 
-    //???
     template<typename T>
     T& getComponent() const {
-        auto ptr(componentArray[getComponentTypeID<T>()]);
-        return *static_cast<T*>(ptr);
+        return index.get<T>();
     }
     
+    #if 0
     void addGroup(Group group);
     
     bool hasGroup(Group group) {
     	return groupBitset[group];
     }
     
-    void delGroup(Group group) {
+    void delroup(Group group) {
     	groupBitset[group] = false;
     }
+    #endif
     	
 };
 
+enum class GroupLabel {all, tiles, players, enemies, colliders }; 
+using Group = std::unordered_set<std::shared_ptr<Entity>>; 
+
 class Manager {
 private:
-    std::vector<std::unique_ptr<Entity>> entities;
-    std::array<std::vector<Entity*>, maxGroups> groupedEntities;
+    std::unordered_map<GroupLabel, Group> groups = {{GroupLabel::all, Group{}}};;
 public:
+
     void update() {
-        for (auto& e: entities) e->update();
+        for (auto& e: groups[GroupLabel::all]) e->update();
     }
+
     void draw() {
-        for (auto& e: entities) e->draw();
+        for (auto& e: groups[GroupLabel::all]) e->draw();
     }
 
+    void draw(const std::vector<GroupLabel>& labels) {
+        for (auto label: labels) {
+            for (auto e: groups[label]) {
+                e->draw();
+            }
+        }
+    }
+    
     void refresh() {
-    	int i = 0;
-    	auto outOfGroupPred = [&i](Entity* entity) { return !entity->isActive() || !entity->hasGroup(i); };
+    #if 0
+        auto inactivePred = [](const std::shared_ptr<Entity> entity) { return !entity->isActive(); };
+        for (auto& [label, group]: groups) {
+            auto remIter = std::remove_if(std::begin(group), std::end(group), inactivePred);
+            group.erase(remIter, std::end(group));
+        }
+    #endif
+    }
+    
+    Entity& addEntity(GroupLabel label) {
+        std::shared_ptr<Entity> ptr = std::make_shared<Entity>(this);
+        groups[GroupLabel::all].insert(ptr);
+        groups[label].insert(ptr);
+        return *ptr;
+    }
 
-    	for (; i < maxGroups; ++i) {
-    		std::vector<Entity*>& curr = groupedEntities[i];
-    		auto removeIter = std::remove_if(curr.begin(), curr.end(), outOfGroupPred);
-    		curr.erase(removeIter, curr.end());
-    	}    		
-   		  	    	
-        auto inactivePred = [](const std::unique_ptr<Entity>& mEntity) { return !mEntity->isActive(); };
-        auto remIter = std::remove_if(std::begin(entities), std::end(entities), inactivePred);
-        entities.erase(remIter, std::end(entities));
-    }
-    
-    Entity& addEntity() {
-        Entity* e = new Entity{this};
-        entities.emplace_back(e);
-        return *e;
-    }
-    
-	void addToGroup(Entity* entity, Group group) {
-    	groupedEntities[group].push_back(entity);
+    #if 0 
+	void addToGroup(Entity* entity, GroupLabel group) {
+    	groups[group].push_back(entity);
 	}
     
-    std::vector<Entity*>& getGroup(Group group) {
-    	return groupedEntities[group];
+    Group& getGroup(GroupLabel label) {
+    	return groups[label];
     }
+    #endif
 };
-
-
-
-
-
-
 
 #endif // ECS_H
