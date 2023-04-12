@@ -1,6 +1,7 @@
 #include "Game.h"
 
-
+//Author of original code:
+//https://www.youtube.com/@CarlBirch
 
 int main (int argc, char ** args) {
 
