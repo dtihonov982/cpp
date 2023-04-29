@@ -13,7 +13,6 @@ public:
 	int width = 32;
 	int scale = 3;
 
-	//todo: is really need to call default ctor of position&
     TransformComponent(): position() {
     }
     TransformComponent(int x, int y): position(x,y) {

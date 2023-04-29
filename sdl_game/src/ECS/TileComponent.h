@@ -29,7 +29,8 @@ public:
 	}
 	
 	void draw() override {
-		TextureManager::Draw(texture, srcR, dstR);
+        Game::renderingQueue.push({texture, srcR, 2, Vector2D{dstR.x, dstR.y}});
+		//TextureManager::Draw(texture, srcR, dstR);
 	}
 	
 	/*

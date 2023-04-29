@@ -1,39 +1,36 @@
-#ifndef KEYBOARDCONTROLLER_H
-#define KEYBOARDCONTROLLER_H
+#ifndef CAMERACONTROLLER_H
+#define CAMERACONTROLLER_H
 
 #include "../Game.h"
 #include "ECS.h"
 #include "Components.h"
 
-class KeyboardController: public Component {
+class CameraController: public Component {
 public:
 	TransformComponent* transform;
-	SpriteComponent* sprite;
 	
 	void init() override {
 		transform = &entity->getComponent<TransformComponent>();
-		sprite = &entity->getComponent<SpriteComponent>();
 	}
 	
+    //TODO: add mouse handling
 	void update() override {
-        //TODO: flip
         Vector2D velocity{0, 0};
-        if (Game::pressedKeys.count(SDLK_w) == 1) {
+        if (Game::pressedKeys.count(SDLK_UP) == 1) {
             velocity.y += -1;
         }
-        if (Game::pressedKeys.count(SDLK_s) == 1) {
+        if (Game::pressedKeys.count(SDLK_DOWN) == 1) {
             velocity.y += 1;
         }
-        if (Game::pressedKeys.count(SDLK_a) == 1) {
+        if (Game::pressedKeys.count(SDLK_LEFT) == 1) {
             velocity.x += -1;
         }
-        if (Game::pressedKeys.count(SDLK_d) == 1) {
+        if (Game::pressedKeys.count(SDLK_RIGHT) == 1) {
             velocity.x += 1;
         }
         velocity.normalize();
         transform->velocity = velocity;
 	}		
-
 };
 
-#endif // KEYBOARDCONTROLLER_H
+#endif // CAMERACONTROLLER_H

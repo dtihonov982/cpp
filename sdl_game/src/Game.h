@@ -5,6 +5,9 @@
 #include "SDL2/SDL_image.h"
 #include <iostream>
 #include <vector>
+#include <unordered_set>
+#include <queue>
+#include "RenderingUnit.h"
 
 class Collider;
 
@@ -21,10 +24,14 @@ public:
     void render();
     void clean();
     bool running() {return isRunning;}
+    static void addTile(int srcX, int srcY, int dstX, int dstY);
+
     static SDL_Renderer* renderer;
     static SDL_Event event;
+
+    static std::unordered_set<SDL_Keycode> pressedKeys;
     static std::vector<Collider*> colliders;
-    static void addTile(int srcX, int srcY, int dstX, int dstY);
+    static std::queue<RenderingUnit> renderingQueue;
 private:
     int cnt = 0;
     bool isRunning = false;

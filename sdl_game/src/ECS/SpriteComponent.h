@@ -56,7 +56,8 @@ public:
         
     }
     void draw() override {
-        TextureManager::Draw(texture, srcR, dstR, spriteFlip);
+        Game::renderingQueue.push({texture, srcR, transform->scale, transform->position, spriteFlip});
+        //TextureManager::Draw(texture, srcR, dstR, spriteFlip);
     }
     
     void play(const char* animName) {

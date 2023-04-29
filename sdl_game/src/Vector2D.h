@@ -9,10 +9,14 @@ public:
 	
 	Vector2D() {}
 	Vector2D(float x_, float y_);
+    Vector2D(int x_, int y_);
 	
 	void add(const Vector2D& other);
 	void sub(const Vector2D& other);
 	void mult(float k);
+    void rotate(float angle);
+    void normalize();
+    float length();
 	
 	Vector2D& operator+=(const Vector2D& other);
 	Vector2D& operator-=(const Vector2D& other);

@@ -10,12 +10,16 @@
 
 SDL_Renderer* Game::renderer = nullptr;
 SDL_Event Game::event;
+std::unordered_set<SDL_Keycode> Game::pressedKeys;
+std::queue<RenderingUnit> Game::renderingQueue;
 Manager manager;
 Entity& player = manager.addEntity(GroupLabel::players);
+Entity& camera = manager.addEntity();
 
 std::vector<Collider*> Game::colliders;
 
-Game::Game(){}
+Game::Game(){
+}
 
 Game::~Game() {}
 
@@ -37,16 +41,26 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
     player.addComponent<SpriteComponent>("assets/player_anims.png", true);
     player.addComponent<KeyboardController>();
     player.addComponent<Collider>("player");
+
+    camera.addComponent<TransformComponent>(0, 0, width, height, 2);
+    camera.addComponent<CameraController>();
     
 	Map::loadMap("assets/map.map");
 }
 
 void Game::handleEvents() {
-    SDL_PollEvent(&event);
-    switch(event.type) {
-    case SDL_QUIT:
-        isRunning = false;
-        break;
+    while (SDL_PollEvent(&event)) {
+        switch(event.type) {
+        case SDL_QUIT:
+            isRunning = false;
+            break;
+        case SDL_KEYDOWN:
+            pressedKeys.insert(event.key.keysym.sym);
+            break;
+        case SDL_KEYUP:
+            pressedKeys.erase(event.key.keysym.sym);
+            break;
+        }
     }
 }
 void Game::update() {
@@ -58,7 +72,6 @@ void Game::update() {
     for (auto coll: colliders) {
     	if (coll != &playerCollider && Collision::AABB(*coll, playerCollider)) {
     		std::cout << playerCollider.tag << " hit " << coll->tag << std::endl;
-    		//std::async([a = playerCollider.tag, b = coll->tag] { std::cout << a << " hit " << b << std::endl; } );
     	}
     }
 }
@@ -70,6 +83,19 @@ void Game::render() {
     SDL_RenderClear(renderer);
     
     manager.draw(renderingOrder);
+    SDL_Rect dstRect;
+    Vector2D cameraPosition{ camera.getComponent<TransformComponent>().position };
+    while (!renderingQueue.empty()) {
+        RenderingUnit unit = renderingQueue.front();
+        renderingQueue.pop();
+
+        dstRect.x = unit.positionOnMap.x - cameraPosition.x;
+        dstRect.y = unit.positionOnMap.y - cameraPosition.y;
+        dstRect.w = unit.srcRect.w * unit.scale;
+        dstRect.h = unit.srcRect.h * unit.scale;
+
+        TextureManager::Draw(unit.texture, unit.srcRect, dstRect, unit.flip);
+    }
 
     SDL_RenderPresent(renderer);
 }

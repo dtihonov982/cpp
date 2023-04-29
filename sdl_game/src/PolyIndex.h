@@ -5,7 +5,8 @@
 #include <bitset>
 #include <stdexcept>
 
-//Holds pointers of derived from Base classes and allow's to access them by type.
+//Allows to get certain Component from Entity by this original type. Example entity.getComponent<SpriteComponent>()
+//N - max count of all derived from Base classes
 template<typename Base, size_t N>
 class PolyIndex {
 public:

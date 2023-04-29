@@ -9,6 +9,7 @@
 #include <array>
 #include "../PolyIndex.h"
 #include <unordered_set>
+#include <unordered_map>
 
 class Component;
 class Entity;
@@ -122,10 +123,11 @@ public:
     #endif
     }
     
-    Entity& addEntity(GroupLabel label) {
+    Entity& addEntity(GroupLabel label = GroupLabel::all) {
         std::shared_ptr<Entity> ptr = std::make_shared<Entity>(this);
         groups[GroupLabel::all].insert(ptr);
-        groups[label].insert(ptr);
+        if (label != GroupLabel::all)
+            groups[label].insert(ptr);
         return *ptr;
     }
 
