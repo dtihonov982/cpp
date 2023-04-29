@@ -3,28 +3,25 @@
 #include <utility>
 #include <iostream>
 #include <memory>
+#include <stack>
+#include <utility>
 
 class ExprPart;
 
 using Expression = std::vector<std::unique_ptr<ExprPart>>;
 
-//TODO: dynamic cast
 enum class ExprPartType { oper, func, number, lpar, rpar, ref };
 
 std::ostream& operator<<(std::ostream& os, ExprPartType type);
 
 class ExprPart {
 public:
-    ExprPart(ExprPartType type_): type(type_) {}
-    ExprPartType getType() { return type; }
     virtual ~ExprPart() {}
-private:
-    ExprPartType type;
 };
 
 class Number: public ExprPart {
 public:
-    Number(int n): ExprPart(ExprPartType::number), value(n) {}
+    Number(int n): value(n) {}
     int getValue() const { return value; }
 private:
     int value;
@@ -33,27 +30,33 @@ private:
 std::ostream& operator<<(std::ostream& os, const Number& n);
 
 struct RPar: public ExprPart {
-    RPar(): ExprPart(ExprPartType::rpar) {}
 };
 
 std::ostream& operator<<(std::ostream& os, const RPar& rpar);
 
 struct LPar: public ExprPart {
-    LPar(): ExprPart(ExprPartType::lpar) {}
 };
 
 std::ostream& operator<<(std::ostream& os, const LPar& lpar);
 
+using precedence_t = unsigned char;
+
 class BinOperator: public ExprPart {
 public:
-    BinOperator(): ExprPart(ExprPartType::oper) {}
+    static BinOperator* makeBinOperator(std::string token);
     virtual int eval(int lhs, int rhs) = 0;
+    virtual precedence_t getPrecedence() = 0;
 };
 
 class BinPlus: public BinOperator {
 public:
     int eval(int lhs, int rhs) override;
+    precedence_t getPrecedence() override;
 };
+
+std::ostream& operator<<(std::ostream& os, const BinPlus& binPlus);
+
+std::ostream& operator<<(std::ostream& os, const ExprPart& exp);
 
 class Scanner {
 public:
@@ -61,5 +64,10 @@ public:
 	static const int maxLengthOfWord;
 	static bool getFirstWord(const std::string& input, std::string& word, ExprPartType& type);
 	static Expression getExpression(std::string input);
+    static void convertToRPN(Expression& expression);
 };
 
+template<typename T>
+T* clone(const T* ptr) {
+    return new T{*ptr};
+}

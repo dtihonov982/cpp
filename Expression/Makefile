@@ -1,11 +1,11 @@
 a.out: main.o Expression.o
-	g++ -g main.o Expression.o -lgtest
+	g++ main.o Expression.o
 
 main.o: main.cpp Expression.h
-	g++ -c main.cpp
+	g++ -c -g main.cpp
 
 Expression.o: Expression.cpp Expression.h
-	g++ -c Expression.cpp
+	g++ -c -g Expression.cpp
 
 clean:
 	-rm *.o

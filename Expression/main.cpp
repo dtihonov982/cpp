@@ -1,14 +1,20 @@
 #include <iostream>
-#include <gtest/gtest.h>
 #include "Expression.h"
 
-TEST(Scanner, test1) {
-    std::string input = "2 + 2 - (3 - 7)";
-    auto expr = Scanner::getExpression(input);
-    EXPECT_EQ(expr.size(), 9);
-}
-
 int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    std::string input;
+    std::getline(std::cin, input);
+    auto expression = Scanner::getExpression(input);
+    Scanner::convertToRPN(expression);
+    for (auto& ptr: expression) {
+        std::cout << *ptr << " ";
+    }
+    std::cout << std::endl;
+
+    std::unique_ptr<ExprPart> ptr{new LPar{}};
+    Expression expr1;
+    expr1.push_back(std::move(ptr));
+
+
+    return 0;
 }

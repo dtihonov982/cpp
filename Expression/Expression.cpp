@@ -39,9 +39,19 @@ std::ostream& operator<<(std::ostream& os, const LPar& lpar) {
 	return os;
 }
 
+BinOperator* BinOperator::makeBinOperator(std::string token) {
+    if (token == "+") {
+        return new BinPlus{};
+    }
+    return nullptr;
+}
+
 int BinPlus::eval(int lhs, int rhs) {
     return lhs + rhs;
 }
+
+precedence_t BinPlus::getPrecedence() { return 2; }
+
 
 const int Scanner::maxLengthOfWord = 255;
 
@@ -64,6 +74,29 @@ bool Scanner::getFirstWord(const std::string& input, std::string& word, ExprPart
         }
     }
     return false;	
+}
+
+std::ostream& operator<<(std::ostream& os, const BinPlus& binPlus) {
+    return os << '+';
+}
+
+std::ostream& operator<<(std::ostream& os, const ExprPart& exp) {
+    if (const Number* ptr = dynamic_cast<const Number*>(&exp)) {
+        os << *ptr;
+    }
+    else if (const BinPlus* ptr = dynamic_cast<const BinPlus*>(&exp)) {
+        os << *ptr;
+    }
+    else if (const LPar* ptr = dynamic_cast<const LPar*>(&exp)) {
+        os << *ptr;
+    }
+    else if (const RPar* ptr = dynamic_cast<const RPar*>(&exp)) {
+        os << *ptr;
+    }
+    else {
+        os << "none";
+    }
+    return os;
 }
 
 Expression Scanner::getExpression(std::string input) {		
@@ -90,7 +123,9 @@ Expression Scanner::getExpression(std::string input) {
                     result.emplace_back(new RPar{});
                     break;
                 case ExprPartType::oper:
-                   break; 
+                    BinOperator* oper = BinOperator::makeBinOperator(word);
+                    result.emplace_back(oper);
+                    break; 
             }
         }
         else {
@@ -98,4 +133,35 @@ Expression Scanner::getExpression(std::string input) {
         }
     }
     return result;
+}
+
+
+
+
+void Scanner::convertToRPN(Expression& expression) {
+    Expression rpn;
+    std::stack<ExprPart*> stack;
+    for (std::unique_ptr<ExprPart>& exprPart: expression) {
+        if (dynamic_cast<Number*>(exprPart.get())) {
+            rpn.push_back(std::move(exprPart));
+        }
+        if (dynamic_cast<LPar*>(exprPart.get())) {
+            rpn.push_back(std::move(exprPart));
+        }
+        #if 0
+        if (auto ptr = dynamic_cast<BinOperator*>(exprPart.get())) {
+            while (!stack.empty()) {
+                ExprPart* top = stack.top();
+                auto oper = dynamic_cast<BinOperator*>(top);
+                if (oper && oper->getPrecedence() >= ptr->getPrecedence()) {
+                    rpn.emplace_back(clone< 
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        #endif
+    }
+    expression = std::move(rpn);
 }
