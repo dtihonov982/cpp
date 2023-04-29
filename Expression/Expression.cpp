@@ -1,4 +1,5 @@
 #include "Expression.h"
+#include <cassert>
 
 std::ostream& operator<<(std::ostream& os, ExprPartType type) {
     switch (type) {
@@ -46,8 +47,8 @@ BinOperator* BinOperator::makeBinOperator(std::string token) {
     return nullptr;
 }
 
-int BinPlus::eval(int lhs, int rhs) {
-    return lhs + rhs;
+Number BinPlus::eval(Number* lhs, Number* rhs) {
+    return lhs->getValue() + rhs->getValue();
 }
 
 precedence_t BinPlus::getPrecedence() { return 2; }
@@ -135,33 +136,59 @@ Expression Scanner::getExpression(std::string input) {
     return result;
 }
 
-
-
-
 void Scanner::convertToRPN(Expression& expression) {
     Expression rpn;
-    std::stack<ExprPart*> stack;
-    for (std::unique_ptr<ExprPart>& exprPart: expression) {
-        if (dynamic_cast<Number*>(exprPart.get())) {
-            rpn.push_back(std::move(exprPart));
+    std::stack<std::unique_ptr<ExprPart>> stack;
+    for (std::unique_ptr<ExprPart>& current: expression) {
+        if (dynamic_cast<Number*>(current.get())) {
+            rpn.push_back(std::move(current));
         }
-        if (dynamic_cast<LPar*>(exprPart.get())) {
-            rpn.push_back(std::move(exprPart));
+        if (dynamic_cast<LPar*>(current.get())) {
+            rpn.push_back(std::move(current));
         }
-        #if 0
-        if (auto ptr = dynamic_cast<BinOperator*>(exprPart.get())) {
+        if (auto rawCurrent = dynamic_cast<BinOperator*>(current.get())) {
             while (!stack.empty()) {
-                ExprPart* top = stack.top();
-                auto oper = dynamic_cast<BinOperator*>(top);
-                if (oper && oper->getPrecedence() >= ptr->getPrecedence()) {
-                    rpn.emplace_back(clone< 
+                std::unique_ptr<ExprPart>& top = stack.top();
+                auto rawTop = dynamic_cast<BinOperator*>(top.get());
+                if (rawTop && rawTop->getPrecedence() >= rawCurrent->getPrecedence()) {
+                    rpn.push_back(std::move(top));
+                    stack.pop();
                 }
                 else {
                     break;
                 }
             }
+            stack.push(std::move(current));
         }
-        #endif
+    }
+    while (!stack.empty()) {
+        std::unique_ptr<ExprPart>& top = stack.top();
+        rpn.push_back(std::move(top));
+        stack.pop();
     }
     expression = std::move(rpn);
+}
+
+//TODO: rpn.size() == 1
+Number eval(Expression& rpn) {
+    std::stack<ExprPart*> stack;
+    std::vector<Number> tmpNumbers;
+    for (auto& current: rpn) {
+        ExprPart* rawCurrent = current.get();
+        if (dynamic_cast<Number*>(rawCurrent)) {
+            stack.push(rawCurrent);
+        }
+        else if (auto oper = dynamic_cast<BinOperator*>(rawCurrent)) {
+            assert(!stack.empty());
+
+            Number* second = static_cast<Number*>(stack.top());
+            stack.pop();
+            Number* first = static_cast<Number*>(stack.top());
+            stack.pop();
+            
+            tmpNumbers.emplace_back(oper->eval(first, second));
+            stack.push(&tmpNumbers.back());
+        }
+    }
+    return tmpNumbers.back();
 }

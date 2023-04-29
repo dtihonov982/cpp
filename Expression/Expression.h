@@ -44,13 +44,13 @@ using precedence_t = unsigned char;
 class BinOperator: public ExprPart {
 public:
     static BinOperator* makeBinOperator(std::string token);
-    virtual int eval(int lhs, int rhs) = 0;
+    virtual Number eval(Number* lhs, Number* rhs) = 0;
     virtual precedence_t getPrecedence() = 0;
 };
 
 class BinPlus: public BinOperator {
 public:
-    int eval(int lhs, int rhs) override;
+    Number eval(Number* lhs, Number* rhs) override;
     precedence_t getPrecedence() override;
 };
 
@@ -67,7 +67,5 @@ public:
     static void convertToRPN(Expression& expression);
 };
 
-template<typename T>
-T* clone(const T* ptr) {
-    return new T{*ptr};
-}
+Number eval(Expression& rpn);
+

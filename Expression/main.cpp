@@ -11,10 +11,8 @@ int main(int argc, char **argv) {
     }
     std::cout << std::endl;
 
-    std::unique_ptr<ExprPart> ptr{new LPar{}};
-    Expression expr1;
-    expr1.push_back(std::move(ptr));
-
+    Number result = eval(expression);
+    std::cout << result.getValue() << std::endl;
 
     return 0;
 }
