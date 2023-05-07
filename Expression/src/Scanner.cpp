@@ -14,7 +14,7 @@ bool Scanner::getFirstWord(const std::string& input, std::string& word, ExprPart
         return true;
     }
 
-    for(;'a' <= input[i] && input[i] <= 'z'; ++i);
+    for(;'A' <= input[i] && input[i] <= 'Z'; ++i);
     if (i) {
         word = input.substr(0, i);
         type = ExprPartType::func;
@@ -48,6 +48,7 @@ const int Scanner::maxLengthOfWord = 255;
 Expression Scanner::getExpression(std::string input) {		
     //deleting spaces
     input.erase(std::remove_if(input.begin(), input.end(), [] (char x) { return x == ' '; }), input.end());
+    std::transform(input.begin(), input.end(), input.begin(), ::toupper);
     Expression result;
     std::string word;
     ExprPartType type;

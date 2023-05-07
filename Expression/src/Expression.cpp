@@ -118,12 +118,13 @@ std::ostream& operator<<(std::ostream& os, const ExprPart& exp) {
 
 
 Number Sqr::eval(const std::vector<const Number*>& argv) { 
+    assert(argv.size());
     auto value = argv[0]->getValue();
     return Number{value * value};
 } 
 
 Function* Function::makeFunction(const std::string& token) {
-    if (token == "sqr") {
+    if (token == "SQR") {
         return new Sqr{};
     }
     return nullptr;
