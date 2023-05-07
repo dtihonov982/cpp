@@ -47,7 +47,7 @@ const int Scanner::maxLengthOfWord = 255;
 
 Expression Scanner::getExpression(std::string input) {		
     //deleting spaces
-    input.erase(std::remove_if(input.begin(), input.end(), [] (char x) { return x == ' '; }), input.end());
+    input.erase(std::remove_if(input.begin(), input.end(), [] (char x) { return x == ' ' || x == '\n'; }), input.end());
     std::transform(input.begin(), input.end(), input.begin(), ::toupper);
     Expression result;
     std::string word;
