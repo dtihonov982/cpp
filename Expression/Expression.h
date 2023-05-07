@@ -46,23 +46,49 @@ public:
     static BinOperator* makeBinOperator(std::string token);
     virtual Number eval(Number* lhs, Number* rhs) = 0;
     virtual precedence_t getPrecedence() = 0;
+    virtual ~BinOperator() = default;
 };
 
 class BinPlus: public BinOperator {
 public:
     Number eval(Number* lhs, Number* rhs) override;
-    precedence_t getPrecedence() override;
+    precedence_t getPrecedence() override { return 2; }
+};
+
+class BinMinus: public BinOperator {
+public:
+    Number eval(Number* lhs, Number* rhs) override;
+    precedence_t getPrecedence() override { return 2; }
+};
+
+class Mult: public BinOperator {
+public:
+    Number eval(Number* lhs, Number* rhs) override;
+    precedence_t getPrecedence() override { return 3; }
+};
+
+class Divide: public BinOperator {
+public:
+    Number eval(Number* lhs, Number* rhs) override;
+    precedence_t getPrecedence() override { return 3; }
 };
 
 std::ostream& operator<<(std::ostream& os, const BinPlus& binPlus);
 
+std::ostream& operator<<(std::ostream& os, const BinMinus& binMinus);
+
 std::ostream& operator<<(std::ostream& os, const ExprPart& exp);
+
+std::ostream& operator<<(std::ostream& os, const Mult& mult);
+
+std::ostream& operator<<(std::ostream& os, const Divide& div);
 
 class Scanner {
 public:
 	static const std::vector<std::pair<ExprPartType, std::regex>> regexes;
 	static const int maxLengthOfWord;
 	static bool getFirstWord(const std::string& input, std::string& word, ExprPartType& type);
+	static bool _getFirstWord(const std::string& input, std::string& word, ExprPartType& type);
 	static Expression getExpression(std::string input);
     static void convertToRPN(Expression& expression);
 };
