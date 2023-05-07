@@ -1,10 +1,10 @@
-#include <string>
-#include <regex>
-#include <utility>
+#ifndef EXPRESSION_H
+#define EXPRESSION_H
+
 #include <iostream>
+#include <string>
+#include <vector>
 #include <memory>
-#include <stack>
-#include <utility>
 
 class ExprPart;
 
@@ -16,7 +16,7 @@ std::ostream& operator<<(std::ostream& os, ExprPartType type);
 
 class ExprPart {
 public:
-    virtual ~ExprPart() {}
+    virtual ~ExprPart() = default;
 };
 
 class Number: public ExprPart {
@@ -83,15 +83,18 @@ std::ostream& operator<<(std::ostream& os, const Mult& mult);
 
 std::ostream& operator<<(std::ostream& os, const Divide& div);
 
-class Scanner {
+class Function: public ExprPart {
 public:
-	static const std::vector<std::pair<ExprPartType, std::regex>> regexes;
-	static const int maxLengthOfWord;
-	static bool getFirstWord(const std::string& input, std::string& word, ExprPartType& type);
-	static bool _getFirstWord(const std::string& input, std::string& word, ExprPartType& type);
-	static Expression getExpression(std::string input);
-    static void convertToRPN(Expression& expression);
+    virtual Number eval(const std::vector<const Number*>& argv) = 0;
+    virtual int argc() = 0;
+    static Function* makeFunction(const std::string& token);
+    virtual ~Function() = default;
 };
 
-Number eval(Expression& rpn);
+class Sqr: public Function {
+public:
+    Number eval(const std::vector<const Number*>& argv) override;
+    int argc() { return 1; }
+};
 
+#endif

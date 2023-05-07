@@ -1,6 +1,5 @@
 #include "Expression.h"
 #include <cassert>
-#include <list>
 
 std::ostream& operator<<(std::ostream& os, ExprPartType type) {
     switch (type) {
@@ -73,49 +72,6 @@ Number Divide::eval(Number* lhs, Number* rhs) {
     return lhs->getValue() / rhs->getValue();
 }
 
-const int Scanner::maxLengthOfWord = 255;
-
-const std::vector<std::pair<ExprPartType, std::regex>> Scanner::regexes = {
-		{ ExprPartType::number, std::regex("^\\d+") }, 
-		{ ExprPartType::oper, std::regex("^[\\+\\-\\*/]") }, 
-		{ ExprPartType::lpar, std::regex("^\\(") }, 
-		{ ExprPartType::rpar, std::regex("^\\)") }, 
-		{ ExprPartType::func, std::regex("^\\w+") }, 
-		{ ExprPartType::ref, std::regex("^\\[\\w+\\]") }
-};
-
-bool Scanner::_getFirstWord(const std::string& input, std::string& word, ExprPartType& type) {
-    std::smatch matches;
-    for (auto& [currType, re]: regexes) {
-        if (std::regex_search(input, matches, re)) {
-            word = matches[0];
-            type = currType;
-            return true;
-        }
-    }
-    return false;	
-}
-
-bool Scanner::getFirstWord(const std::string& input, std::string& word, ExprPartType& type) {
-    static const std::string operators = "+-*/";
-
-    int i = 0;
-    for(;'0' <= input[i] && input[i] <= '9'; ++i);
-    if (i) {
-        word = input.substr(0, i);
-        type = ExprPartType::number;
-        return true;
-    }
-
-    if (operators.find(input.front()) != std::string::npos) {
-        word = input.front();
-        type = ExprPartType::oper;
-        return true;
-    }
-
-    return false;	
-}
-
 std::ostream& operator<<(std::ostream& os, const BinPlus& binPlus) {
     return os << '+';
 }
@@ -160,109 +116,15 @@ std::ostream& operator<<(std::ostream& os, const ExprPart& exp) {
     return os;
 }
 
-Expression Scanner::getExpression(std::string input) {		
-    //deleting spaces
-    input.erase(std::remove_if(input.begin(), input.end(), [] (char x) { return x == ' '; }), input.end());
-    Expression result;
-    std::string word;
-    ExprPartType type;
-    int value;
-    for (int i = 0, recognizedWordLength; i < input.size(); i += recognizedWordLength) {
-        //getting short part of whole string that may be too long for fast regex matching
-        std::string current = input.substr(i, maxLengthOfWord);
-        if (getFirstWord(current, word, type)) {
-            recognizedWordLength = word.length();
-            switch (type) {
-                case ExprPartType::number:
-                    value = std::stoi(word);
-                    result.emplace_back(new Number{value});
-                    break;
-                case ExprPartType::lpar:
-                    result.emplace_back(new LPar{});
-                    break;
-                case ExprPartType::rpar:
-                    result.emplace_back(new RPar{});
-                    break;
-                case ExprPartType::oper:
-                    BinOperator* oper = BinOperator::makeBinOperator(word);
-                    result.emplace_back(oper);
-                    break; 
-            }
-        }
-        else {
-            throw std::invalid_argument("Can`t recognize \"" + current + "\"");
-        }
-    }
-    return result;
-}
 
-void Scanner::convertToRPN(Expression& expression) {
-    Expression rpn;
-    std::stack<std::unique_ptr<ExprPart>> stack;
-    for (std::unique_ptr<ExprPart>& current: expression) {
-        if (dynamic_cast<Number*>(current.get())) {
-            rpn.push_back(std::move(current));
-        }
-        if (auto rawCurrent = dynamic_cast<BinOperator*>(current.get())) {
-            while (!stack.empty()) {
-                std::unique_ptr<ExprPart>& top = stack.top();
-                auto rawTop = dynamic_cast<BinOperator*>(top.get());
-                if (rawTop && rawTop->getPrecedence() >= rawCurrent->getPrecedence()) {
-                    rpn.push_back(std::move(top));
-                    stack.pop();
-                }
-                else {
-                    break;
-                }
-            }
-            stack.push(std::move(current));
-        }
-        if (dynamic_cast<LPar*>(current.get())) {
-            rpn.push_back(std::move(current));
-        }
-        if (dynamic_cast<RPar*>(current.get())) {
-            while (!stack.empty()) {
-                auto& top = stack.top();
-                if (!dynamic_cast<LPar*>(top.get()))  {
-                    rpn.push_back(std::move(top));
-                    stack.pop();
-                }
-                else {
-                    stack.pop();
-                    break;
-                }
-            }
-        }
-    }
-    while (!stack.empty()) {
-        std::unique_ptr<ExprPart>& top = stack.top();
-        rpn.push_back(std::move(top));
-        stack.pop();
-    }
-    expression = std::move(rpn);
-}
+Number Sqr::eval(const std::vector<const Number*>& argv) { 
+    auto value = argv[0]->getValue();
+    return Number{value * value};
+} 
 
-//TODO: rpn.size() == 1
-Number eval(Expression& rpn) {
-    std::stack<ExprPart*> stack;
-    //Using list here because I need storage pointers on his elements in stack and vector invalidates pointers.
-    std::list<Number> tmpNumbers;
-    for (auto& current: rpn) {
-        ExprPart* rawCurrent = current.get();
-        if (dynamic_cast<Number*>(rawCurrent)) {
-            stack.push(rawCurrent);
-        }
-        else if (auto oper = dynamic_cast<BinOperator*>(rawCurrent)) {
-            assert(!stack.empty());
-
-            Number* second = static_cast<Number*>(stack.top());
-            stack.pop();
-            Number* first = static_cast<Number*>(stack.top());
-            stack.pop();
-            
-            tmpNumbers.emplace_back(oper->eval(first, second));
-            stack.push(&tmpNumbers.back());
-        }
+Function* Function::makeFunction(const std::string& token) {
+    if (token == "sqr") {
+        return new Sqr{};
     }
-    return tmpNumbers.back();
+    return nullptr;
 }
