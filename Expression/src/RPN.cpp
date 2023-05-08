@@ -27,11 +27,14 @@ void rpn::convertToRPN(Expression& expression) {
             }
             stack.push(std::move(current));
         }
+        if (dynamic_cast<UnaryOperator*>(current.get())) {
+            stack.push(std::move(current));
+        }
         if (dynamic_cast<Function*>(current.get())) {
-            rpn.push_back(std::move(current));
+            stack.push(std::move(current));
         }
         if (dynamic_cast<LPar*>(current.get())) {
-            rpn.push_back(std::move(current));
+            stack.push(std::move(current));
         }
         if (dynamic_cast<RPar*>(current.get())) {
             while (!stack.empty()) {
@@ -80,6 +83,13 @@ Number rpn::eval(Expression& rpnExpr) {
             tmpNumbers.emplace_back(oper->eval(first, second));
             stack.push(&tmpNumbers.back());
         }
+        else if (auto oper = dynamic_cast<UnaryOperator*>(rawCurrent)) {
+            assert(!stack.empty());
+            Number* num = static_cast<Number*>(stack.top());
+            stack.pop();
+            tmpNumbers.push_back(oper->eval(num));
+            stack.push(&tmpNumbers.back());
+        }
         else if (auto func = dynamic_cast<Function*>(rawCurrent)) {
             std::vector<const Number*> argv;
             for(int i = func->argc(); i > 0; --i) {
@@ -91,6 +101,6 @@ Number rpn::eval(Expression& rpnExpr) {
             stack.push(&tmpNumbers.back());
         }
     }
-    return tmpNumbers.back();
+    return tmpNumbers.empty() ? *static_cast<Number*>(stack.top()) : tmpNumbers.back();
 }
 

@@ -41,36 +41,54 @@ std::ostream& operator<<(std::ostream& os, const LPar& lpar);
 
 using precedence_t = unsigned char;
 
+class UnaryOperator: public ExprPart {
+public:
+    static UnaryOperator* make(std::string token);
+    virtual Number eval(Number* num) = 0;
+    virtual precedence_t getPrecedence() const = 0;
+    virtual ~UnaryOperator() = default;
+};
+
+class UnaryMinus: public UnaryOperator {
+    Number eval(Number* num) override;
+    precedence_t getPrecedence() const override { return 0; }
+};
+
+class UnaryPlus: public UnaryOperator {
+    Number eval(Number* num) override;
+    precedence_t getPrecedence() const override { return 0; }
+};
+
 class BinOperator: public ExprPart {
 public:
-    static BinOperator* makeBinOperator(std::string token);
+    static BinOperator* make(std::string token);
     virtual Number eval(Number* lhs, Number* rhs) = 0;
-    virtual precedence_t getPrecedence() = 0;
+    virtual precedence_t getPrecedence() const = 0;
     virtual ~BinOperator() = default;
 };
 
 class BinPlus: public BinOperator {
 public:
     Number eval(Number* lhs, Number* rhs) override;
-    precedence_t getPrecedence() override { return 2; }
+    precedence_t getPrecedence() const override { return 2; }
 };
 
 class BinMinus: public BinOperator {
 public:
     Number eval(Number* lhs, Number* rhs) override;
-    precedence_t getPrecedence() override { return 2; }
+    precedence_t getPrecedence() const override { return 2; }
 };
 
 class Mult: public BinOperator {
 public:
     Number eval(Number* lhs, Number* rhs) override;
-    precedence_t getPrecedence() override { return 3; }
+    precedence_t getPrecedence() const override { return 3; }
 };
 
 class Divide: public BinOperator {
 public:
     Number eval(Number* lhs, Number* rhs) override;
-    precedence_t getPrecedence() override { return 3; }
+    precedence_t getPrecedence() const override { return 3; }
 };
 
 std::ostream& operator<<(std::ostream& os, const BinPlus& binPlus);
@@ -87,7 +105,7 @@ class Function: public ExprPart {
 public:
     virtual Number eval(const std::vector<const Number*>& argv) = 0;
     virtual int argc() = 0;
-    static Function* makeFunction(const std::string& token);
+    static Function* make(const std::string& token);
     virtual ~Function() = default;
 };
 

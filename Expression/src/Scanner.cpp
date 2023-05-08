@@ -52,6 +52,7 @@ Expression Scanner::getExpression(std::string input) {
     Expression result;
     std::string word;
     ExprPartType type;
+    ExprPartType prevType;
     int value;
     for (int i = 0, recognizedWordLength; i < input.size(); i += recognizedWordLength) {
         //getting short part of whole string that may be too long for fast regex matching
@@ -70,16 +71,23 @@ Expression Scanner::getExpression(std::string input) {
                     result.emplace_back(new RPar{});
                     break;
                 case ExprPartType::oper: {
-                    BinOperator* oper = BinOperator::makeBinOperator(word);
+                    ExprPart* oper;
+                    if (result.empty() || (prevType != ExprPartType::number && prevType != ExprPartType::rpar)) {
+                        oper = UnaryOperator::make(word);
+                    }
+                    else {
+                        oper = BinOperator::make(word);
+                    }
                     result.emplace_back(oper);
                     break; 
                 }
                 case ExprPartType::func: {
-                    Function* f = Function::makeFunction(word);
+                    Function* f = Function::make(word);
                     result.emplace_back(f);
                     break; 
                 }
             }
+            prevType = type;
         }
         else {
             throw std::invalid_argument("Can`t recognize \"" + current + "\"");

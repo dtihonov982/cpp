@@ -11,5 +11,8 @@ int main(int argc, char **argv) {
     rpn::convertToRPN(expression);
     Number result = rpn::eval(expression);
     std::cout << result.getValue() << std::endl;
+
+    #if 0
+    #endif
     return 0;
 }

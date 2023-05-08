@@ -40,7 +40,25 @@ std::ostream& operator<<(std::ostream& os, const LPar& lpar) {
 	return os;
 }
 
-BinOperator* BinOperator::makeBinOperator(std::string token) {
+UnaryOperator* UnaryOperator::make(std::string token) {
+    if (token == "-") {
+        return new UnaryMinus{};
+    }
+    if (token == "+") {
+        return new UnaryPlus{};
+    }
+    return nullptr;
+}
+
+Number UnaryMinus::eval(Number* num) {
+    return - num->getValue();
+}
+
+Number UnaryPlus::eval(Number* num) {
+    return num->getValue();
+}
+
+BinOperator* BinOperator::make(std::string token) {
     if (token == "+") {
         return new BinPlus{};
     }
@@ -123,7 +141,7 @@ Number Sqr::eval(const std::vector<const Number*>& argv) {
     return Number{value * value};
 } 
 
-Function* Function::makeFunction(const std::string& token) {
+Function* Function::make(const std::string& token) {
     if (token == "SQR") {
         return new Sqr{};
     }
