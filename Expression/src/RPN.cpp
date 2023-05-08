@@ -13,10 +13,11 @@ void rpn::convertToRPN(Expression& expression) {
         if (dynamic_cast<Number*>(current.get())) {
             rpn.push_back(std::move(current));
         }
-        if (auto rawCurrent = dynamic_cast<BinOperator*>(current.get())) {
+        if (dynamic_cast<BinOperator*>(current.get())) {
+            auto rawCurrent = dynamic_cast<IPrecedence*>(current.get());
             while (!stack.empty()) {
                 std::unique_ptr<ExprPart>& top = stack.top();
-                auto rawTop = dynamic_cast<BinOperator*>(top.get());
+                auto rawTop = dynamic_cast<IPrecedence*>(top.get());
                 if (rawTop && rawTop->getPrecedence() >= rawCurrent->getPrecedence()) {
                     rpn.push_back(std::move(top));
                     stack.pop();

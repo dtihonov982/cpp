@@ -13,12 +13,20 @@ std::string getStr(std::string file) {
     return ss.str();
 }
 
-TEST(Scanner, input200k) {
-    std::string input = getStr("input200k.txt");
+TEST(Scanner, easy200k) {
+    std::string input = getStr("easy200k.txt");
     auto expression = Scanner::getExpression(input);
     rpn::convertToRPN(expression);
     Number result = rpn::eval(expression);
     EXPECT_EQ(result.getValue(), 199);
+}
+
+TEST(Scanner, normal10k) {
+    std::string input = getStr("normal10k.txt");
+    auto expression = Scanner::getExpression(input);
+    rpn::convertToRPN(expression);
+    Number result = rpn::eval(expression);
+    EXPECT_EQ(result.getValue(), 301);
 }
 
 int main(int argc, char **argv) {

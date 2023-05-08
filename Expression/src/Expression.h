@@ -41,51 +41,55 @@ std::ostream& operator<<(std::ostream& os, const LPar& lpar);
 
 using precedence_t = unsigned char;
 
+class IPrecedence {
+public:
+    virtual precedence_t getPrecedence() const = 0;
+    virtual ~IPrecedence() = default;
+};
+
 class UnaryOperator: public ExprPart {
 public:
     static UnaryOperator* make(std::string token);
     virtual Number eval(Number* num) = 0;
-    virtual precedence_t getPrecedence() const = 0;
     virtual ~UnaryOperator() = default;
 };
 
-class UnaryMinus: public UnaryOperator {
+class UnaryMinus: public UnaryOperator, public IPrecedence {
     Number eval(Number* num) override;
-    precedence_t getPrecedence() const override { return 0; }
+    precedence_t getPrecedence() const override { return 4; }
 };
 
-class UnaryPlus: public UnaryOperator {
+class UnaryPlus: public UnaryOperator, public IPrecedence {
     Number eval(Number* num) override;
-    precedence_t getPrecedence() const override { return 0; }
+    precedence_t getPrecedence() const override { return 4; }
 };
 
 class BinOperator: public ExprPart {
 public:
     static BinOperator* make(std::string token);
     virtual Number eval(Number* lhs, Number* rhs) = 0;
-    virtual precedence_t getPrecedence() const = 0;
     virtual ~BinOperator() = default;
 };
 
-class BinPlus: public BinOperator {
+class BinPlus: public BinOperator, public IPrecedence {
 public:
     Number eval(Number* lhs, Number* rhs) override;
     precedence_t getPrecedence() const override { return 2; }
 };
 
-class BinMinus: public BinOperator {
+class BinMinus: public BinOperator, public IPrecedence {
 public:
     Number eval(Number* lhs, Number* rhs) override;
     precedence_t getPrecedence() const override { return 2; }
 };
 
-class Mult: public BinOperator {
+class Mult: public BinOperator, public IPrecedence {
 public:
     Number eval(Number* lhs, Number* rhs) override;
     precedence_t getPrecedence() const override { return 3; }
 };
 
-class Divide: public BinOperator {
+class Divide: public BinOperator, public IPrecedence {
 public:
     Number eval(Number* lhs, Number* rhs) override;
     precedence_t getPrecedence() const override { return 3; }
