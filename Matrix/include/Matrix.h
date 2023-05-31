@@ -13,7 +13,6 @@ public:
     Matrix(int rows_, int cols_);
     Matrix(int rows_, int cols_, const T& value);
     Matrix(std::initializer_list<std::initializer_list<T>> lst); 
-    Matrix(std::istream& is);
 
     Matrix(const Matrix<T>& other);
     Matrix<T>& operator=(const Matrix<T>& other);
@@ -43,6 +42,7 @@ public:
     T det() const;
     
     static bool same_shapes(const Matrix& lhs, const Matrix& rhs);
+    static Matrix loadFromDump(std::istream& is);
     
 private:
     void allocate();
@@ -114,18 +114,6 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
         std::copy(row.begin(), row.end(), ptr);
         ptr += cols;
     }
-}
-
-template<typename T>
-Matrix<T>::Matrix(std::istream& is) {
-#ifndef NDEBUG
-    std::cout << "# Matrix istream ctor. " << this << std::endl;
-#endif
-    std::istream_iterator<T> it{is}, end;
-    rows = *it++;
-    cols = *it++;
-    allocate();
-    std::copy(it, end, data);
 }
 
 template<typename T>
@@ -289,6 +277,16 @@ T Matrix<T>::det() const {
         sign *= -1;
         result += sign * operator[](0)[j] * minor.det();
     }
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::loadFromDump(std::istream& is) {
+    std::istream_iterator<T> it{is}, end;
+    int rows_ = *it++;
+    int cols_ = *it++;
+    Matrix result(rows_, cols_);
+    std::copy(it, end, result.data);    
     return result;
 }
 
