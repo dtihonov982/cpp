@@ -29,8 +29,8 @@ public:
     };   
     RowProxy operator[](int i) { return RowProxy{data + i * cols}; }
     const RowProxy operator[](int i) const { return RowProxy{data + i * cols}; }
-    T& get(int i, int j) { return data[i * cols + j]; }
-    const T& get(int i, int j) const { return data[i * cols + j]; }
+    T& at(int i, int j) { return data[i * cols + j]; }
+    const T& at(int i, int j) const { return data[i * cols + j]; }
 
     void dump(std::ostream& out) const;
     Matrix clone() const;
@@ -52,6 +52,22 @@ private:
     T* data = nullptr;
     int rows = 0;
     int cols = 0;
+#ifndef NDEBUG
+    int id_ = 0;
+    static int getID() {
+        static int lastID = 0;
+        return ++lastID;
+    }
+    void setID() { 
+        if (!id_)
+            id_ = getID(); 
+    }
+    void log(std::string_view sv) {
+        std::cout << "#" << id_ << "\t";
+        std::cout <<"this=" << this << "\tdata=" << data;    
+        std::cout << "\t" << sv << '\n';    
+    }  
+#endif
 };
 
 template<typename T>
@@ -77,34 +93,34 @@ void Matrix<T>::fill(const T& value) {
 template<typename T>
 Matrix<T>::Matrix() {
 #ifndef NDEBUG
-    std::cout << "# Matrix default ctor. " << this << std::endl;
+    setID();
+    log("default ctor");
 #endif
 }
 
 template<typename T>
 Matrix<T>::Matrix(int rows_, int cols_) {
-#ifndef NDEBUG
-    std::cout << "# Matrix(n, m) ctor. " << this << std::endl;
-#endif
     rows = rows_;
     cols = cols_;
     allocate();
+#ifndef NDEBUG
+    setID();
+    log("(n, m) ctor");
+#endif
 }
 
 template<typename T>
 Matrix<T>::Matrix(int rows_, int cols_, const T& value)
 : Matrix(rows_, cols_) {
-#ifndef NDEBUG
-    std::cout << "# Matrix(n, m, value) ctor. " << this << std::endl;
-#endif
     fill(value);
+#ifndef NDEBUG
+    setID();
+    log("(n, m, value) ctor");
+#endif
 }
 
 template<typename T>
 Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
-#ifndef NDEBUG
-    std::cout << "# Matrix init_lst ctor. " << this << std::endl;
-#endif
     rows = lst.size();
     cols = lst.begin()->size();
     allocate();
@@ -114,6 +130,10 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> lst) {
         std::copy(row.begin(), row.end(), ptr);
         ptr += cols;
     }
+#ifndef NDEBUG
+    setID();
+    log("init list ctor");
+#endif
 }
 
 template<typename T>
@@ -126,41 +146,40 @@ void Matrix<T>::copy(const Matrix<T>& other) {
 
 template<typename T>
 Matrix<T>::Matrix(const Matrix<T>& other) {
-#ifndef NDEBUG
-    std::cout << "# Matrix copy ctor. " << this << std::endl;
-#endif
     copy(other);
+#ifndef NDEBUG
+    setID();
+    log("copy ctor");
+#endif
 }
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other) {
-#ifndef NDEBUG
-    std::cout << "# Matrix copy assignment. " << this << std::endl;
-#endif
     if (this == &other) {
         return *this;
     }
     free();
     copy(other);
+#ifndef NDEBUG
+    log("copy assignment");
+#endif
     return *this;
 }
 
 template<typename T>
 Matrix<T>::Matrix(Matrix<T>&& other) noexcept {
-#ifndef NDEBUG
-    std::cout << "# Matrix move ctor. " << this << std::endl;
-#endif
     data = other.data;
     rows = other.rows;
     cols = other.cols;
     other.data = nullptr;
+#ifndef NDEBUG
+    setID();
+    log("move ctor");
+#endif
 }
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other) noexcept {
-#ifndef NDEBUG
-    std::cout << "# Matrix move assign. " << this << std::endl;
-#endif
     if (this == &other) {
         return *this;
     }
@@ -169,13 +188,16 @@ Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other) noexcept {
     rows = other.rows;
     cols = other.cols;
     other.data = nullptr;
+#ifndef NDEBUG
+    log("move assignment");
+#endif
     return *this;
 }
 
 template<typename T>
 Matrix<T>::~Matrix() {
 #ifndef NDEBUG
-    std::cout << "# Matrix dtor  " << this << " data=" << data << std::endl;
+    log("dtor");
 #endif
     free();    
 }
@@ -185,7 +207,7 @@ void Matrix<T>::dump(std::ostream& out) const {
     out << rows << ' ' << cols << std::endl;
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            out << get(i, j) << " ";
+            out << at(i, j) << " ";
         }
         out << std::endl;
     }
