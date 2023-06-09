@@ -35,7 +35,7 @@ public:
     void dump(std::ostream& out) const;
     Matrix clone() const;
     
-    Matrix<T> product(const T& x) const; 
+    void product(const T& x); 
     Matrix<T> product(const Matrix<T>& B) const;
     Matrix<T> pow(int n) const;
     Matrix<T> minorMatrix(int exRow, int exCol) const;
@@ -221,13 +221,12 @@ Matrix<T> Matrix<T>::product(const Matrix& B) const {
     Matrix<T> result(rows, B.cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < B.cols; ++j) {
-            //? is ~T invokes in this cycle?
             T sum{};
             for (int k = 0; k < cols; ++k) {
-                sum += operator[](i)[k] * B[k][j];
+                sum += at(i, k) * B.at(k, j);
 
             }
-            result[i][j] = sum;
+            result.at(i, j) = sum;
         }
     }
     return result;
@@ -247,25 +246,27 @@ Matrix<T> Matrix<T>::pow(int n) const {
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::product(const T& x) const {
-    Matrix<T> result{*this};
+void Matrix<T>::product(const T& x) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            result[i][j] *= x;
+            at(i, j) *= x;
         }
     }
-    return result;
 }
 
+#if 0
 template<typename T>
 Matrix<T> operator*(const T& number, const Matrix<T>& matrix) {
-    return matrix.product(number);
+    matrix.product(number);
+    return matrix;
 }
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T>& matrix, const T& number) {
-    return matrix.product(number);
+    matrix.product(number);
+    return matrix;
 }
+#endif
 
 template<typename T>
 Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) const {
