@@ -278,7 +278,7 @@ Matrix<T> Matrix<T>::minorMatrix(int exRow, int exCol) const {
         if (isrc == exRow) continue;
         for (int jsrc = 0, jdst = 0; jsrc < cols; ++jsrc) {
             if (jsrc == exCol) continue;
-            result[idst][jdst] = operator[](isrc)[jsrc];
+            result[idst][jdst] = at(isrc, jsrc);
             ++jdst;
         }
         ++idst;
@@ -292,13 +292,13 @@ T Matrix<T>::det() const {
         throw "Matrix is not square matrix.";
     }
     if (rows == 1 && cols == 1) {
-        return operator[](0)[0];
+        return at(0, 0);
     }
     T result{};
     for (int j = 0, sign = -1; j < cols; ++j) {
         Matrix<T> minor = minorMatrix(0, j);
         sign *= -1;
-        result += sign * operator[](0)[j] * minor.det();
+        result += sign * at(0, j) * minor.det();
     }
     return result;
 }
