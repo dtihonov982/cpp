@@ -48,13 +48,12 @@ void destroy(Node*& root) {
 
 //TODO: smart algorithm of is_pow2
 bool is_pow2(int x) {
-    if (x < 1)
+    if (!x)
         return false;
-    int k = 1;
-    while (k < x) {
-        k *= 2;
+    while (!(x & 1)) {
+        x >>= 1;
     }
-    return k == x;
+    return x == 1 || x == -1;
 }
 
 Nodes create_level(const Keys& keys) {
