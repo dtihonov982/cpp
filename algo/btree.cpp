@@ -16,41 +16,8 @@ struct Node {
     Node(int x): value(x) {} 
 };
 
-/* creates tree level by level.
-A result of make_tree(6) is tree:
-      0
-  1       2
-3   4   5   
-*/
-Node* make_tree(int size) {
-    if (size <= 0)
-        return nullptr;
-    int count = 0;
-    Node* root = new Node(count++);
-    std::queue<Node*> queue_;
-    queue_.push(root);
-    for (;;) {
-        Node* curr = queue_.front();
-        queue_.pop();
-        if (count < size) {
-            Node* left = new Node(count++);
-            queue_.push(left);
-            curr->left = left;
-        }
-        else {
-            break;
-        }
-        if (count < size) {
-            Node* right = new Node(count++);
-            queue_.push(right);
-            curr->right = right;
-        }
-        else {
-            break;
-        }
-    }        
-    return root;
-}
+using Nodes = std::vector<Node*>;
+using Keys = std::vector<int>;
 
 //applies function to each node level by level
 template<typename UnaryFunction>
@@ -89,9 +56,7 @@ bool is_pow2(int x) {
     return k == x;
 }
 
-using Nodes = std::vector<Node*>;
-
-Nodes create_level(const std::vector<int>& keys) {
+Nodes create_level(const Keys& keys) {
     assert(is_pow2(keys.size()));
 
     std::vector<Node*> nodes;
@@ -120,8 +85,6 @@ void bind_levels(Nodes& parents, Nodes& childs) {
         }
     }
 }
-
-using Keys = std::vector<int>;
 
 /* level_ctor
 makes from {{0}, {1, 2}, {NIL, NIL, 5, 6}} tree
@@ -166,14 +129,51 @@ void vdump(const Node* root, std::ostream& os, int level = 0) {
     vdump(root->left, os, level + 1);
 }
 
+/* creates tree level by level.
+A result of make_tree(6) is tree:
+      0
+  1       2
+3   4   5   
+*/
+//TODO: use level_ctor
+Node* make_tree(int size) {
+    if (size <= 0)
+        return nullptr;
+    int count = 0;
+    Node* root = new Node(count++);
+    std::queue<Node*> queue_;
+    queue_.push(root);
+    for (;;) {
+        Node* curr = queue_.front();
+        queue_.pop();
+        if (count < size) {
+            Node* left = new Node(count++);
+            queue_.push(left);
+            curr->left = left;
+        }
+        else {
+            break;
+        }
+        if (count < size) {
+            Node* right = new Node(count++);
+            queue_.push(right);
+            curr->right = right;
+        }
+        else {
+            break;
+        }
+    }        
+    return root;
+}
 
 int main() {
     std::vector<Keys> levels_keys = {
                 {0}, 
             {1,     2}, 
-        {NIL, NIL, 5, 6}
+        {4 , NIL, 5, 6}
     };
     Node* root = level_ctor(levels_keys);
+    //destroy(root->right->left);
     vdump(root, std::cout);
 
     destroy(root);    
