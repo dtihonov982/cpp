@@ -46,6 +46,7 @@ void destroy(Node*& root) {
     root = nullptr;
 }
 
+//TODO: smart algorithm of is_pow2
 bool is_pow2(int x) {
     if (x < 1)
         return false;
