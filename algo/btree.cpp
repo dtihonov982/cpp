@@ -166,6 +166,37 @@ Node* make_tree(int size) {
     return root;
 }
 
+size_t depth(Node* root) {
+    if (root) {
+        size_t left_depth = depth(root->left);
+        size_t right_depth = depth(root->right);
+        return std::max(left_depth, right_depth) + 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+//A tree is balanced if for every node in the tree
+//depth of left and right subtree differs less than 2
+bool isBalanced(Node* root) {
+    if (root) {
+        //current node balanced if depth of left and right
+        //nodes differs less than 2
+        ssize_t left_depth = depth(root->left);
+        ssize_t right_depth = depth(root->right);
+        ssize_t diff = std::abs(right_depth - left_depth);
+        bool node_is_balanced = diff < 2;
+        //check for all nodes in tree
+        return node_is_balanced 
+                && isBalanced(root->left)
+                && isBalanced(root->right);
+    }
+    else {
+        return true;
+    }
+}
+
 int main() {
     std::vector<Keys> levels_keys = {
                 {0}, 
