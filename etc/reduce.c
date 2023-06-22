@@ -14,7 +14,7 @@ struct task_t {
 int* arr_create(size_t size) {
     int *arr = malloc(size * sizeof(int));
     for (size_t i = 1; i <= size; ++i) {
-        arr[i] = i;
+        arr[i - 1] = i;
     }
     return arr;
 }
