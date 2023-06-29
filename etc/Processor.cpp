@@ -1,15 +1,13 @@
 //TODO: JMP_I, JMP_R
 #include <iostream>
-#include <array>
-#include <algorithm>
-
 #include <memory>
+#include <cassert>
+
 #include <vector>
+#include <array>
 #include <map>
 #include <unordered_map>
 #include <bitset>
-
-#include <cassert>
 
 #define MEM_SIZE 64
 #define OPCODE_WC 3     //Opcode words count
@@ -35,18 +33,23 @@ public:
                , {rsp, 0}, {rbp, 0}
             };
     }
+
     Word get(RegId id) {
         return regs_[id];
     }
+
     void set(RegId id, Word data) {
         regs_[id] = data;
     }
+
     bool get(FlagId id) {
         return flags_[id];
     }
+
     void set(FlagId id) {
         flags_[id] = true;
     }
+
     void reset(FlagId id) {
         flags_[id] = false;
     }
@@ -76,15 +79,19 @@ public:
         assert(data.size() < MEM_SIZE);
         std::copy(data.begin(), data.end(), data_.begin());
     }
+
     Word get(Address address) {
         return data_[address];
     }
+
     void set(Address address, Word word) {
         data_[address] = word;
     }
+
     size_t size() const {
         return data_.size();
     }
+
     void dump() {
         auto& os = std::cout;
         os << "Memory: \n";
@@ -99,6 +106,7 @@ public:
         }
         if (k) std::cout << '\n';
     }
+
 private:
     std::array<Word, MEM_SIZE> data_;
 };
@@ -114,7 +122,7 @@ namespace cmd {
     struct MovRR;
     struct PushR;
     struct PopR;
-}
+} //namespace cmd 
 
 class ICommandVisitor {
 public:
@@ -140,7 +148,7 @@ namespace cmd {
       , CMP_RI = 31
       , JMP    = 50
       , JZ
-      , PUSH_R  = 70
+      , PUSH_R = 70
       , POP_R  
     };
 
@@ -163,109 +171,126 @@ namespace cmd {
     };
 
     struct AddRR: public ICommand {
+        reg::RegId dst_reg;
+        reg::RegId src_reg;
+
         AddRR(reg::RegId dst, reg::RegId src)
         : ICommand(ADD_RR)
         , dst_reg(dst)
         , src_reg(src) {
         }
-        reg::RegId dst_reg;
-        reg::RegId src_reg;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }
     };
 
     struct AddRI: public ICommand {
+        reg::RegId dst_reg;
+        Word val_;
+
         AddRI(reg::RegId dst, Word val)
         : ICommand(ADD_RI)
         , dst_reg(dst)
         , val_(val) {
         }
-        reg::RegId dst_reg;
-        Word val_;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }
     };
 
     struct MovRI: public ICommand {
+        reg::RegId dst_reg;
+        Word val_;
+
         MovRI(reg::RegId dst, Word val)
         : ICommand(MOV_RI)
         , dst_reg(dst)
         , val_(val) {
         }
-        reg::RegId dst_reg;
-        Word val_;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }
     };
 
     struct MovRR: public ICommand {
+        reg::RegId dst_reg;
+        reg::RegId src_reg;
+
         MovRR(reg::RegId dst, reg::RegId src)
         : ICommand(MOV_RR)
         , dst_reg(dst)
         , src_reg(src) {
         }
-        reg::RegId dst_reg;
-        reg::RegId src_reg;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }
     };
 
     struct Jmp: public ICommand {
+        Address addr_;
+
         Jmp(Address addr)
         : ICommand(JMP)
         , addr_(addr) {
         }
-        Address addr_;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }        
     };
 
     struct CmpRI: public ICommand {
+        reg::RegId reg_;
+        Word val_;
+
         CmpRI(reg::RegId reg, Word val)
         : ICommand(CMP_RI)
         , reg_(reg)
         , val_(val) {
         }
-        reg::RegId reg_;
-        Word val_;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }        
     };
 
     struct Jz: public ICommand {
+        Address addr_;
+
         Jz(Address addr)
         : ICommand(JZ)
         , addr_(addr) {
         }
-        Address addr_;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }        
     };
 
     struct PushR: public ICommand {
+        reg::RegId src_reg;
+
         PushR(reg::RegId reg)
         : ICommand(PUSH_R)
         , src_reg(reg) {
         }
-        reg::RegId src_reg;
+
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }        
     };
 
     struct PopR: public ICommand {
+        reg::RegId dst_reg;
+
         PopR(reg::RegId reg)
         : ICommand(POP_R)
         , dst_reg(reg) {
         }
-        reg::RegId dst_reg;
         void accept(ICommandVisitor* cv) override {
             cv->visit(*this);
         }        
@@ -276,7 +301,7 @@ namespace cmd {
 
 using ICommandPtr = std::unique_ptr<cmd::ICommand>;
 
-namespace tr {
+namespace tr { //translate
 
 class Encoder: public ICommandVisitor {
 public:
