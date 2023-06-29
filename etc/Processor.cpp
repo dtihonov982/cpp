@@ -1,4 +1,4 @@
-//TODO: JMP_I
+//TODO: JMP_I, JMP_R
 #include <iostream>
 #include <array>
 #include <algorithm>
@@ -12,7 +12,7 @@
 #include <cassert>
 
 #define MEM_SIZE 64
-#define OPCODE_WC 3
+#define OPCODE_WC 3     //Opcode words count
 #define TIME_LIMIT 1000
 #define FLAGS_COUNT 8
 
@@ -60,7 +60,7 @@ public:
         os << '\n';
         os << "Flags: " << flags_.to_string() << '\n';
     }
-//private:
+private:
     //using map instead unordered_map for 
     //ordering in dump. speed is doesn't matter 
     std::map<RegId, Word> regs_; //uninitialized
@@ -130,7 +130,6 @@ public:
     virtual void visit(cmd::PopR& cm)   = 0;
 };
 
-
 namespace cmd {
     enum Code { 
         END    = 0
@@ -162,7 +161,6 @@ namespace cmd {
             cv->visit(*this);
         }
     };
-
 
     struct AddRR: public ICommand {
         AddRR(reg::RegId dst, reg::RegId src)
@@ -600,11 +598,9 @@ int main() {
 
     Memory mem{encodedProg};
     reg::Registers regs;
-
     Processor proc{mem, regs};
     proc.dump();
     proc.run();
-
     proc.dump();
 
     return 0;
