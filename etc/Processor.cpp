@@ -643,15 +643,27 @@ int main() {
     using namespace reg;
 
     Block encodedProg = {
-        MOV_RI, r0, 1
-      , MOV_RI, r1, 2
-      , MOV_RI, r2, 3
-      , PUSH_R, r0, 0
-      , PUSH_R, r1, 0
-      , PUSH_R, r2, 0
-      , POP_R,  r0, 0
-      , POP_R,  r1, 0
-      , POP_R,  r2, 0
+        MOV_RI,   r1,   101
+      //call double
+      , PUSH_I,   9,    0
+      , JMP_I,    12,   0
+      , END,      0,    0
+
+      //double: f(r1) = 2*r1 = r0:
+      //prologue
+      , PUSH_R,   rbp,  0
+      , MOV_RR,   rbp,  rsp
+      
+      , MOV_RR,   r0,   r1
+      , ADD_RR,   r0,   r0
+
+      //epilogue
+      , MOV_RR,   rsp,  rbp
+      , POP_R,    rbp,   0
+
+      //ret
+      , POP_R,    r2,    0
+      , JMP_R,    r2,    0
     };
 
     Memory mem{encodedProg};
