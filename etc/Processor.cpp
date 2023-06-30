@@ -112,7 +112,8 @@ namespace cmd {
     struct AddRI;
     struct CmpRI;
     struct End;
-    struct Jmp;
+    struct JmpR;
+    struct JmpI;
     struct Jz;
     struct MovRI;
     struct MovRR;
@@ -128,7 +129,8 @@ public:
     virtual void visit(cmd::MovRI& cm) = 0;
     virtual void visit(cmd::MovRR& cm) = 0;
     virtual void visit(cmd::CmpRI& cm)   = 0;
-    virtual void visit(cmd::Jmp& cm)   = 0;
+    virtual void visit(cmd::JmpR& cm)   = 0;
+    virtual void visit(cmd::JmpI& cm)   = 0;
     virtual void visit(cmd::Jz& cm)   = 0;
     virtual void visit(cmd::PushR& cm)   = 0;
     virtual void visit(cmd::PopR& cm)   = 0;
@@ -144,7 +146,8 @@ namespace cmd {
       , MOV_RR = 20
       , MOV_RI = 21
       , CMP_RI = 31
-      , JMP    = 50
+      , JMP_R  = 50
+      , JMP_I
       , JZ
       , PUSH_R = 70
       , POP_R  
@@ -230,11 +233,24 @@ namespace cmd {
         }
     };
 
-    struct Jmp: public ICommand {
+    struct JmpR: public ICommand {
+        reg::RegId reg;
+
+        JmpR(reg::RegId reg_)
+        : ICommand(JMP_R)
+        , reg(reg_) {
+        }
+
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(*this);
+        }        
+    };
+
+    struct JmpI: public ICommand {
         Address addr_;
 
-        Jmp(Address addr)
-        : ICommand(JMP)
+        JmpI(Address addr)
+        : ICommand(JMP_I)
         , addr_(addr) {
         }
 
@@ -329,7 +345,12 @@ public:
         append(opcode);
     }
 
-    void visit(cmd::Jmp& cm) override {
+    void visit(cmd::JmpR& cm) override {
+        Opcode opcode = {cm.code_, cm.reg, 0};
+        append(opcode);
+    }
+
+    void visit(cmd::JmpI& cm) override {
         Opcode opcode = {cm.code_, cm.addr_, 0};
         append(opcode);
     }
@@ -435,9 +456,16 @@ public:
         return cmd::ICommandPtr{new cmd::CmpRI{dst_reg, val}};
     }
 
-    static cmd::ICommandPtr Jmp_dec(Opcode opc) {
+    static cmd::ICommandPtr JmpR_dec(Opcode opc) {
         assert(opc[2] == 0);
-        cmd::ICommand* cm = new cmd::Jmp{opc[1]};
+        reg::RegId reg = static_cast<reg::RegId>(opc[1]);
+        cmd::ICommand* cm = new cmd::JmpR{reg};
+        return cmd::ICommandPtr{cm};
+    }
+
+    static cmd::ICommandPtr JmpI_dec(Opcode opc) {
+        assert(opc[2] == 0);
+        cmd::ICommand* cm = new cmd::JmpI{opc[1]};
         return cmd::ICommandPtr{cm};
     }
 
@@ -470,7 +498,8 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
     , {cmd::ADD_RI,       AddRI_dec}
     , {cmd::MOV_RR,       MovRR_dec}
     , {cmd::MOV_RI,       MovRI_dec}
-    , {cmd::JMP,          Jmp_dec} 
+    , {cmd::JMP_R,        JmpR_dec} 
+    , {cmd::JMP_I,        JmpI_dec} 
     , {cmd::JZ,           Jz_dec} 
     , {cmd::CMP_RI,       CmpRI_dec} 
     , {cmd::PUSH_R,       PushR_dec} 
@@ -562,7 +591,12 @@ public:
             regs_.set(reg::ZF);
     }
 
-    void visit(cmd::Jmp& cm) override {
+    void visit(cmd::JmpR& cm) override {
+        auto addr = regs_.get(cm.reg);
+        regs_.set(reg::rip, addr);
+    }
+
+    void visit(cmd::JmpI& cm) override {
         regs_.set(reg::rip, cm.addr_);
     }
 
