@@ -27,11 +27,6 @@ enum FlagId { ZF = 6 };
 class Registers {
 public:
     Registers() {
-        regs_ = {{r0, 0}, {r1, 0}
-               , {r2, 0}, {r3, 0}
-               , {rip, 0}
-               , {rsp, 0}, {rbp, 0}
-            };
     }
 
     Word get(RegId id) {
@@ -55,18 +50,20 @@ public:
     }
 
     void dump() {
+        static const std::vector<std::pair<RegId, std::string>> regsRepr {
+                    {r0, "r0"}, {r1, "r1"}, {r2, "r2"}, {r3, "r3"}
+                  , {rip, "rip"}, {rsp, "rsp"}, {rbp, "rbp"}
+                };
         auto& os = std::cout;
         os << "Registers: \n";
-        for (auto [id, val]: regs_) {
-            os << id << ": " << val << '\t';
+        for (auto& [id, repr]: regsRepr) {
+            os << repr << ": " << regs_[id] << '\t';
         }
         os << '\n';
         os << "Flags: " << flags_.to_string() << '\n';
     }
 private:
-    //using map instead unordered_map for 
-    //ordering in dump. speed is doesn't matter 
-    std::map<RegId, Word> regs_; //uninitialized
+    std::unordered_map<RegId, Word> regs_;
     std::bitset<FLAGS_COUNT> flags_;
 };
 
@@ -95,16 +92,15 @@ public:
     void dump() {
         auto& os = std::cout;
         os << "Memory: \n";
-        size_t k = 0;
-        for (size_t i = 0; i < MEM_SIZE; ++i) {
-            std::cout << i << ": " << data_[i] << '\t';
-            k++;
-            if (k == 3) {
-                std::cout << '\n';
-                k = 0;
+        for (size_t i = 0, k = 0; i < MEM_SIZE; ) {
+            os << i << ":\t"; 
+            while (i < MEM_SIZE && k != 3) {
+                os << data_[i++] << '\t';
+                ++k;
             }
+            k = 0;
+            std::cout << '\n';
         }
-        if (k) std::cout << '\n';
     }
 
 private:
@@ -136,6 +132,8 @@ public:
     virtual void visit(cmd::Jz& cm)   = 0;
     virtual void visit(cmd::PushR& cm)   = 0;
     virtual void visit(cmd::PopR& cm)   = 0;
+
+    virtual ~ICommandVisitor() {}
 };
 
 namespace cmd {
@@ -160,6 +158,8 @@ namespace cmd {
         virtual void accept(ICommandVisitor* cv) = 0;
         virtual ~ICommand() {}
     };
+
+    using ICommandPtr = std::unique_ptr<cmd::ICommand>;
 
     struct End: public ICommand {
         End()
@@ -299,7 +299,6 @@ namespace cmd {
     using list = std::vector<cmd::ICommand*>;
 }
 
-using ICommandPtr = std::unique_ptr<cmd::ICommand>;
 
 namespace tr { //translate
 
@@ -381,11 +380,11 @@ private:
     }
 };
 
-using DecodingHandler = ICommandPtr (*) (Opcode opc);
+using DecodingHandler = cmd::ICommandPtr (*) (Opcode opc);
 
 class Decoder {
 public:
-    static ICommandPtr decode(Opcode opc) {
+    static cmd::ICommandPtr decode(Opcode opc) {
         cmd::Code code = static_cast<cmd::Code>(opc[0]);
         auto search = decs.find(code);
         if (search != decs.end()) {
@@ -397,69 +396,69 @@ public:
         }
     }
 
-    static ICommandPtr End_dec(Opcode opc) {
+    static cmd::ICommandPtr End_dec(Opcode opc) {
         cmd::ICommand* cm = new cmd::End;
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr AddRR_dec(Opcode opc) {
+    static cmd::ICommandPtr AddRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
         cmd::ICommand* cm = new cmd::AddRR{dst_reg, src_reg};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr AddRI_dec(Opcode opc) {
+    static cmd::ICommandPtr AddRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word val = opc[2];
         cmd::ICommand* cm = new cmd::AddRI{dst_reg, val};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr MovRI_dec(Opcode opc) {
+    static cmd::ICommandPtr MovRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word val = opc[2];
         cmd::ICommand* cm = new cmd::MovRI{dst_reg, val};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr MovRR_dec(Opcode opc) {
+    static cmd::ICommandPtr MovRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
         cmd::ICommand* cm = new cmd::MovRI{dst_reg, src_reg};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr CmpRI_dec(Opcode opc) {
+    static cmd::ICommandPtr CmpRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word  val = static_cast<Word>(opc[2]);
-        return ICommandPtr{new cmd::CmpRI{dst_reg, val}};
+        return cmd::ICommandPtr{new cmd::CmpRI{dst_reg, val}};
     }
 
-    static ICommandPtr Jmp_dec(Opcode opc) {
+    static cmd::ICommandPtr Jmp_dec(Opcode opc) {
         assert(opc[2] == 0);
         cmd::ICommand* cm = new cmd::Jmp{opc[1]};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr Jz_dec(Opcode opc) {
+    static cmd::ICommandPtr Jz_dec(Opcode opc) {
         assert(opc[2] == 0);
         cmd::ICommand* cm = new cmd::Jz{opc[1]};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr PushR_dec(Opcode opc) {
+    static cmd::ICommandPtr PushR_dec(Opcode opc) {
         assert(opc[2] == 0);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[1]);
         cmd::ICommand* cm = new cmd::PushR{src_reg};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 
-    static ICommandPtr PopR_dec(Opcode opc) {
+    static cmd::ICommandPtr PopR_dec(Opcode opc) {
         assert(opc[2] == 0);
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         cmd::ICommand* cm = new cmd::PopR{dst_reg};
-        return ICommandPtr{cm};
+        return cmd::ICommandPtr{cm};
     }
 private:
     static const std::unordered_map<cmd::Code, DecodingHandler> decs;
@@ -475,7 +474,7 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
     , {cmd::JZ,           Jz_dec} 
     , {cmd::CMP_RI,       CmpRI_dec} 
     , {cmd::PUSH_R,       PushR_dec} 
-    , {cmd::POP_R,       PopR_dec} 
+    , {cmd::POP_R,        PopR_dec} 
 };
 
 } //namespace tr
