@@ -1,4 +1,5 @@
-//TODO: JMP_I, JMP_R
+//TODO: Leave, Ret,
+//TODO: Stack manager class in Processor
 #include <iostream>
 #include <memory>
 #include <cassert>
@@ -22,7 +23,7 @@ using Opcode    = std::array<Word, OPCODE_WC>;
 namespace reg {
 
 enum RegId { r0 = 0, r1, r2, r3, rip = 10, rsp = 15, rbp};
-enum FlagId { ZF = 6 };
+enum FlagId { ZF = 6, SF = 7 };
 
 class Registers {
 public:
@@ -43,6 +44,10 @@ public:
 
     void set(FlagId id) {
         flags_[id] = true;
+    }
+
+    void set(FlagId id, bool p) {
+        flags_[id] = p;
     }
 
     void reset(FlagId id) {
@@ -115,6 +120,8 @@ namespace cmd {
     struct JmpR;
     struct JmpI;
     struct Jz;
+    struct JlessI;
+    struct CallI;
     struct MovRI;
     struct MovRR;
     struct PushR;
@@ -132,6 +139,8 @@ public:
     virtual void visit(cmd::JmpR& cm)   = 0;
     virtual void visit(cmd::JmpI& cm)   = 0;
     virtual void visit(cmd::Jz& cm)   = 0;
+    virtual void visit(cmd::JlessI& cm)   = 0;
+    virtual void visit(cmd::CallI& cm)   = 0;
     virtual void visit(cmd::PushR& cm)   = 0;
     virtual void visit(cmd::PopR& cm)   = 0;
 
@@ -149,6 +158,8 @@ namespace cmd {
       , JMP_R  = 50
       , JMP_I
       , JZ
+      , JL_I
+      , CALL_I
       , PUSH_R = 70
       , POP_R  
     };
@@ -287,6 +298,32 @@ namespace cmd {
         }        
     };
 
+    struct JlessI: public ICommand {
+        Address addr_;
+
+        JlessI(Address addr)
+        : ICommand(JL_I)
+        , addr_(addr) {
+        }
+
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(*this);
+        }        
+    };
+
+    struct CallI: public ICommand {
+        Address addr_;
+
+        CallI(Address addr)
+        : ICommand(CALL_I)
+        , addr_(addr) {
+        }
+
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(*this);
+        }        
+    };
+
     struct PushR: public ICommand {
         reg::RegId src_reg;
 
@@ -356,6 +393,16 @@ public:
     }
 
     void visit(cmd::Jz& cm) override {
+        Opcode opcode = {cm.code_, cm.addr_, 0};
+        append(opcode);
+    }
+
+    void visit(cmd::JlessI& cm) override {
+        Opcode opcode = {cm.code_, cm.addr_, 0};
+        append(opcode);
+    }
+
+    void visit(cmd::CallI& cm) override {
         Opcode opcode = {cm.code_, cm.addr_, 0};
         append(opcode);
     }
@@ -446,7 +493,7 @@ public:
     static cmd::ICommandPtr MovRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
-        cmd::ICommand* cm = new cmd::MovRI{dst_reg, src_reg};
+        cmd::ICommand* cm = new cmd::MovRR{dst_reg, src_reg};
         return cmd::ICommandPtr{cm};
     }
 
@@ -472,6 +519,18 @@ public:
     static cmd::ICommandPtr Jz_dec(Opcode opc) {
         assert(opc[2] == 0);
         cmd::ICommand* cm = new cmd::Jz{opc[1]};
+        return cmd::ICommandPtr{cm};
+    }
+
+    static cmd::ICommandPtr JlessI_dec(Opcode opc) {
+        assert(opc[2] == 0);
+        cmd::ICommand* cm = new cmd::JlessI{opc[1]};
+        return cmd::ICommandPtr{cm};
+    }
+
+    static cmd::ICommandPtr CallI_dec(Opcode opc) {
+        assert(opc[2] == 0);
+        cmd::ICommand* cm = new cmd::CallI{opc[1]};
         return cmd::ICommandPtr{cm};
     }
 
@@ -501,6 +560,8 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
     , {cmd::JMP_R,        JmpR_dec} 
     , {cmd::JMP_I,        JmpI_dec} 
     , {cmd::JZ,           Jz_dec} 
+    , {cmd::JL_I,         JlessI_dec} 
+    , {cmd::CALL_I,       CallI_dec} 
     , {cmd::CMP_RI,       CmpRI_dec} 
     , {cmd::PUSH_R,       PushR_dec} 
     , {cmd::POP_R,        PopR_dec} 
@@ -587,8 +648,8 @@ public:
         reg::RegId reg = cm.reg_;
         Word reg_v = regs_.get(reg);
         Word tmp = reg_v - cm.val_;
-        if (tmp == 0)
-            regs_.set(reg::ZF);
+        regs_.set(reg::ZF, tmp == 0);
+        regs_.set(reg::SF, tmp < 0);
     }
 
     void visit(cmd::JmpR& cm) override {
@@ -603,6 +664,30 @@ public:
     void visit(cmd::Jz& cm) override {
         if (regs_.get(reg::ZF))
             regs_.set(reg::rip, cm.addr_);
+    }
+
+    void visit(cmd::JlessI& cm) override {
+        if (regs_.get(reg::SF))
+            regs_.set(reg::rip, cm.addr_);
+    }
+
+    void visit(cmd::CallI& cm) override {
+        auto curr_rip = regs_.get(reg::rip);
+        auto ret_addr = curr_rip + OPCODE_WC; //address of next command after call
+        pushIntoStack(ret_addr);
+        jump(cm.addr_);
+
+    }
+
+    void jump(Address addr) {
+        regs_.set(reg::rip, addr);
+    }
+
+    void pushIntoStack(Word word) {
+        auto rsp_v = regs_.get(reg::rsp);
+        --rsp_v;
+        mem_.set(rsp_v, word);
+        regs_.set(reg::rsp, rsp_v);
     }
 
     void visit(cmd::PushR& cm) override {
@@ -645,8 +730,7 @@ int main() {
     Block encodedProg = {
         MOV_RI,   r1,   101
       //call double
-      , PUSH_I,   9,    0
-      , JMP_I,    12,   0
+      , CALL_I,   9,    0 
       , END,      0,    0
 
       //double: f(r1) = 2*r1 = r0:

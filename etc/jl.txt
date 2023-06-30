@@ -1,0 +1,7 @@
+
+        MOV_RI, r0, 15
+      , CMP_RI, r0, 10
+      , JL_I,   15, 0
+      , MOV_RI, r1, 100
+      , JMP_I,  18, 0
+      , MOV_RI, r1, -200

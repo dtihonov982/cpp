@@ -1,0 +1,46 @@
+
+    Block encodedProg = {
+        MOV_RI,   r1,   101
+      //call double
+      , MOV_RI,   r0,   12
+      , PUSH_R,   r0,   0
+      , JMP_I,    15,   0
+      , END,      0,    0
+
+      //double: f(r1) = 2*r1 = r0:
+      //prologue
+      , PUSH_R,   rbp,  0
+      , MOV_RR,   rbp,  rsp
+      
+      , MOV_RR,   r0,   r1
+      , ADD_RR,   r0,   r0
+
+      //epilogue
+      , MOV_RR,   rsp,  rbp
+      , POP_R,    rbp,   0
+
+      //ret
+      , POP_R,    r2,    0
+      , JMP_R,    r2,    0
+    };
+
+        MOV_RI,   r1,   101
+      //call double
+      , CALL_I,   9,    0 
+      , END,      0,    0
+
+      //double: f(r1) = 2*r1 = r0:
+      //prologue
+      , PUSH_R,   rbp,  0
+      , MOV_RR,   rbp,  rsp
+      
+      , MOV_RR,   r0,   r1
+      , ADD_RR,   r0,   r0
+
+      //epilogue
+      , MOV_RR,   rsp,  rbp
+      , POP_R,    rbp,   0
+
+      //ret
+      , POP_R,    r2,    0
+      , JMP_R,    r2,    0
