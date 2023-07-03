@@ -1,5 +1,4 @@
 //TODO: Leave, Ret,
-//TODO: Stack manager class in Processor
 #include <iostream>
 #include <memory>
 #include <cassert>
@@ -30,7 +29,7 @@ public:
     Registers() {
     }
 
-    Word get(RegId id) {
+    Word& get(RegId id) {
         return regs_[id];
     }
 
@@ -569,12 +568,37 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
 
 } //namespace tr
 
+class StackManager {
+public:
+    StackManager(Memory& mem, reg::Registers& regs)
+    : rspValueRef_(regs.get(reg::rsp))
+    , mem_(mem) {
+        rspValueRef_ = MEM_SIZE - 1;
+    }
+
+    Word pop() {
+        Word data = mem_.get(rspValueRef_);
+        rspValueRef_++;
+        return data;
+    }
+
+    void push(Word data) {
+        mem_.set(rspValueRef_, data);
+        rspValueRef_--;
+    }
+        
+private:
+    Memory& mem_;
+    Word& rspValueRef_;
+};
+
 class Processor: public ICommandVisitor {
 public:
     
     Processor(Memory& mem, reg::Registers& regs)
     : mem_(mem)
-    , regs_(regs) {
+    , regs_(regs) 
+    , stackMan_(mem, regs) {
     }
 
     void run() {
@@ -721,6 +745,7 @@ private:
     Word rip;
     Memory mem_;
     reg::Registers regs_;
+    StackManager stackMan_;
 };
 
 int main() {
