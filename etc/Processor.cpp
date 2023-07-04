@@ -1,4 +1,4 @@
-//TODO: Leave, Ret,
+//TODO: Test Leave, Ret,
 #include <iostream>
 #include <memory>
 #include <cassert>
@@ -125,6 +125,8 @@ namespace cmd {
     struct MovRR;
     struct PushR;
     struct PopR;
+    struct Leave;
+    struct Ret;
 } //namespace cmd 
 
 class ICommandVisitor {
@@ -142,6 +144,8 @@ public:
     virtual void visit(cmd::CallI& cm)   = 0;
     virtual void visit(cmd::PushR& cm)   = 0;
     virtual void visit(cmd::PopR& cm)   = 0;
+    virtual void visit(cmd::Leave& cm)   = 0;
+    virtual void visit(cmd::Ret& cm)   = 0;
 
     virtual ~ICommandVisitor() {}
 };
@@ -161,6 +165,8 @@ namespace cmd {
       , CALL_I
       , PUSH_R = 70
       , POP_R  
+      , RET
+      , LEAVE
     };
 
     class ICommand {
@@ -347,7 +353,22 @@ namespace cmd {
             cv->visit(*this);
         }        
     };
-
+    struct Ret: public ICommand {
+        Ret()
+        : ICommand(RET) {
+        }
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(*this);
+        }
+    };
+    struct Leave: public ICommand {
+        Leave()
+        : ICommand(LEAVE) {
+        }
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(*this);
+        }
+    };
     using list = std::vector<cmd::ICommand*>;
 }
 
@@ -357,6 +378,16 @@ namespace tr { //translate
 class Encoder: public ICommandVisitor {
 public:
     void visit(cmd::End& cm) override {
+        Opcode opcode = {cm.code_, 0, 0};
+        append(opcode);
+    }
+
+    void visit(cmd::Ret& cm) override {
+        Opcode opcode = {cm.code_, 0, 0};
+        append(opcode);
+    }
+
+    void visit(cmd::Leave& cm) override {
         Opcode opcode = {cm.code_, 0, 0};
         append(opcode);
     }
@@ -468,6 +499,16 @@ public:
         return cmd::ICommandPtr{cm};
     }
 
+    static cmd::ICommandPtr Ret_dec(Opcode opc) {
+        cmd::ICommand* cm = new cmd::Ret;
+        return cmd::ICommandPtr{cm};
+    }
+
+    static cmd::ICommandPtr Leave_dec(Opcode opc) {
+        cmd::ICommand* cm = new cmd::Leave;
+        return cmd::ICommandPtr{cm};
+    }
+
     static cmd::ICommandPtr AddRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
@@ -564,32 +605,41 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
     , {cmd::CMP_RI,       CmpRI_dec} 
     , {cmd::PUSH_R,       PushR_dec} 
     , {cmd::POP_R,        PopR_dec} 
+    , {cmd::RET,          Ret_dec} 
+    , {cmd::LEAVE,        Leave_dec} 
 };
 
 } //namespace tr
 
-class StackManager {
+class Stack {
 public:
-    StackManager(Memory& mem, reg::Registers& regs)
-    : rspValueRef_(regs.get(reg::rsp))
+    Stack(Memory& mem, reg::Registers& regs)
+    : regs_(regs)
     , mem_(mem) {
-        rspValueRef_ = MEM_SIZE - 1;
+        getRsp() = mem_.size();
     }
 
     Word pop() {
-        Word data = mem_.get(rspValueRef_);
-        rspValueRef_++;
+        auto& rsp = getRsp();
+        assert(rsp < mem_.size());
+        Word data = mem_.get(rsp);
+        rsp++;
         return data;
     }
 
     void push(Word data) {
-        mem_.set(rspValueRef_, data);
-        rspValueRef_--;
+        auto& rsp = getRsp();
+        rsp--;
+        mem_.set(rsp, data);
     }
         
 private:
+    Word& getRsp() {
+        return regs_.get(reg::rsp);
+    }
+
     Memory& mem_;
-    Word& rspValueRef_;
+    reg::Registers& regs_;
 };
 
 class Processor: public ICommandVisitor {
@@ -598,11 +648,12 @@ public:
     Processor(Memory& mem, reg::Registers& regs)
     : mem_(mem)
     , regs_(regs) 
-    , stackMan_(mem, regs) {
+    , stack_(mem_, regs_) 
+    {
     }
 
     void run() {
-        initStack();
+        initFrame();
         for (int t = 0; isActive_ && t < TIME_LIMIT; ++t) {
             Word rip_before = regs_.get(reg::rip);
             Opcode opc = getNextInstruction();
@@ -615,9 +666,8 @@ public:
         }
     }
 
-    void initStack() {
-        regs_.set(reg::rsp, MEM_SIZE - 1);
-        regs_.set(reg::rbp, MEM_SIZE - 1);
+    void initFrame() {
+        regs_.set(reg::rbp, mem_.size());
     }
 
     Opcode getNextInstruction() {
@@ -698,7 +748,7 @@ public:
     void visit(cmd::CallI& cm) override {
         auto curr_rip = regs_.get(reg::rip);
         auto ret_addr = curr_rip + OPCODE_WC; //address of next command after call
-        pushIntoStack(ret_addr);
+        stack_.push(ret_addr);
         jump(cm.addr_);
 
     }
@@ -707,32 +757,24 @@ public:
         regs_.set(reg::rip, addr);
     }
 
-    void pushIntoStack(Word word) {
-        auto rsp_v = regs_.get(reg::rsp);
-        --rsp_v;
-        mem_.set(rsp_v, word);
-        regs_.set(reg::rsp, rsp_v);
-    }
-
     void visit(cmd::PushR& cm) override {
-        //SUB RSP, 8
-        auto addrInRsp = regs_.get(reg::rsp);
-        addrInRsp--; 
-        regs_.set(reg::rsp, addrInRsp);
-
-        //MOV [RSP], R0
         auto src_v = regs_.get(cm.src_reg);
-        mem_.set(addrInRsp, src_v); 
+        stack_.push(src_v);
     }
 
     void visit(cmd::PopR& cm) override {
-        //MOV R0, [RSP]
-        auto addrInRsp = regs_.get(reg::rsp);
-        auto valueInStack = mem_.get(addrInRsp);
-        regs_.set(cm.dst_reg, valueInStack);
-        //ADD RSP, 8
-        ++addrInRsp;
-        regs_.set(reg::rsp, addrInRsp);
+        regs_.set(cm.dst_reg, stack_.pop());
+    }
+
+    void visit(cmd::Leave& cm) override {
+        cmd::MovRR c1 {reg::rsp, reg::rbp};
+        visit(c1);
+        cmd::PopR  c2 {reg::rbp};
+        visit(c2);
+    }
+    void visit(cmd::Ret& cm) override {
+        auto retAddr = stack_.pop();
+        jump(retAddr);
     }
 
     void dump() {
@@ -745,7 +787,7 @@ private:
     Word rip;
     Memory mem_;
     reg::Registers regs_;
-    StackManager stackMan_;
+    Stack stack_;
 };
 
 int main() {
@@ -777,10 +819,25 @@ int main() {
 
     Memory mem{encodedProg};
     reg::Registers regs;
+#if 0    
+    Stack stack(mem, regs);
+    stack.push(100);
+    stack.push(200);
+    stack.push(300);
+    regs.dump();
+    mem.dump();
+    std::cout << stack.pop() << '\n';
+    std::cout << stack.pop() << '\n';
+    std::cout << stack.pop() << '\n';
+
+    regs.dump();
+    mem.dump();
+#endif
+#if 1
     Processor proc{mem, regs};
     proc.dump();
     proc.run();
     proc.dump();
-
+#endif
     return 0;
 }
