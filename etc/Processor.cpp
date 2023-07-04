@@ -1,4 +1,4 @@
-//TODO: Test Leave, Ret,
+//Emulation of processor with assembly language
 #include <iostream>
 #include <memory>
 #include <cassert>
@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include <bitset>
 
-#define MEM_SIZE 64
+#define MEM_SIZE 128
 #define OPCODE_WC 3     //Opcode words count
-#define TIME_LIMIT 1000
+#define TIME_LIMIT 1000000
 #define FLAGS_COUNT 8
 
 using Address   = int;
@@ -654,7 +654,8 @@ public:
 
     void run() {
         initFrame();
-        for (int t = 0; isActive_ && t < TIME_LIMIT; ++t) {
+        int t;
+        for (t = 0; isActive_ && t < TIME_LIMIT; ++t) {
             Word rip_before = regs_.get(reg::rip);
             Opcode opc = getNextInstruction();
             auto cm = tr::Decoder::decode(opc);
@@ -664,6 +665,8 @@ public:
             if (rip_before == rip_after)
                 regs_.set(reg::rip, rip_before += OPCODE_WC);
         }
+        assert(t < TIME_LIMIT);
+        std::cout << "Clock: " << t << '\n';
     }
 
     void initFrame() {
@@ -793,28 +796,29 @@ private:
 int main() {
     using namespace cmd;
     using namespace reg;
-
+    //Fibonacci number n=19
     Block encodedProg = {
-        MOV_RI,   r1,   101
-      //call double
-      , CALL_I,   9,    0 
-      , END,      0,    0
-
-      //double: f(r1) = 2*r1 = r0:
-      //prologue
-      , PUSH_R,   rbp,  0
-      , MOV_RR,   rbp,  rsp
-      
-      , MOV_RR,   r0,   r1
-      , ADD_RR,   r0,   r0
-
-      //epilogue
-      , MOV_RR,   rsp,  rbp
-      , POP_R,    rbp,   0
-
-      //ret
-      , POP_R,    r2,    0
-      , JMP_R,    r2,    0
+         MOV_RI,	r1,	19
+        ,CALL_I,	9,	0
+        ,END,	    0,	0
+        ,PUSH_R,	rbp,	0
+        ,MOV_RR,	rbp,	 rsp
+        ,CMP_RI,	r1,	2
+        ,JL_I,	    54,	0
+        ,ADD_RI,	r1,	-1
+        ,PUSH_R,	r1,	0
+        ,CALL_I,	9,	0
+        ,POP_R,	    r1,	0
+        ,PUSH_R ,	r0,	0
+        ,ADD_RI,	    r1,	-1
+        ,CALL_I,	9,	0
+        ,POP_R,	    r2,	0
+        ,ADD_RR,	r0,	 r2
+        ,LEAVE,	    0,	0
+        ,RET,	    0,	0
+        ,MOV_RR,    r0, r1
+        ,LEAVE,	    0,	0
+        ,RET,	    0,	0
     };
 
     Memory mem{encodedProg};
@@ -835,7 +839,7 @@ int main() {
 #endif
 #if 1
     Processor proc{mem, regs};
-    proc.dump();
+    //proc.dump();
     proc.run();
     proc.dump();
 #endif
