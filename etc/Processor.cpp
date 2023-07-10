@@ -8,6 +8,7 @@
 #include <map>
 #include <unordered_map>
 #include <bitset>
+#include <utility>
 
 #define MEM_SIZE 128
 #define OPCODE_WC 3     //Opcode words count
@@ -196,6 +197,7 @@ namespace cmd {
       , LEAVE
     };
 
+
     class ICommand {
     protected:
         ICommand(Code code) : code_(code) {}
@@ -205,68 +207,65 @@ namespace cmd {
         virtual ~ICommand() {}
     };
 
+    template <typename Derived>
+    class ICommandHelper: public ICommand {
+    public:
+        ICommandHelper(Code code): ICommand(code) {}
+        void accept(ICommandVisitor* cv) override {
+            cv->visit(static_cast<Derived&>(*this));
+        }
+        virtual ~ICommandHelper() {}
+    };
+
     using ICommandPtr = std::unique_ptr<cmd::ICommand>;
 
-    struct End: public ICommand {
+    struct End: public ICommandHelper<End> {
         End()
-        : ICommand(END) {
-        }
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
+        : ICommandHelper<End>(END) {
         }
     };
 
-    struct AddRR: public ICommand {
+    struct AddRR: public ICommandHelper<AddRR> {
         reg::RegId dst_reg;
         reg::RegId src_reg;
 
         AddRR(reg::RegId dst, reg::RegId src)
-        : ICommand(ADD_RR)
+        : ICommandHelper<AddRR> (ADD_RR)
         , dst_reg(dst)
         , src_reg(src) {
         }
-
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
-        }
     };
 
-    struct AddRI: public ICommand {
+    struct AddRI: public ICommandHelper<AddRI>  {
         reg::RegId dst_reg;
         Word val_;
 
         AddRI(reg::RegId dst, Word val)
-        : ICommand(ADD_RI)
+        : ICommandHelper<AddRI>(ADD_RI)
         , dst_reg(dst)
         , val_(val) {
         }
 
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
-        }
     };
 
-    struct MovRI: public ICommand {
+    struct MovRI: public ICommandHelper<MovRI> {
         reg::RegId dst_reg;
         Word val_;
 
         MovRI(reg::RegId dst, Word val)
-        : ICommand(MOV_RI)
+        : ICommandHelper<MovRI>(MOV_RI)
         , dst_reg(dst)
         , val_(val) {
         }
 
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
-        }
     };
 
-    struct MovRR: public ICommand {
+    struct MovRR: public ICommandHelper<MovRR> {
         reg::RegId dst_reg;
         reg::RegId src_reg;
 
         MovRR(reg::RegId dst, reg::RegId src)
-        : ICommand(MOV_RR)
+        : ICommandHelper<MovRR>(MOV_RR)
         , dst_reg(dst)
         , src_reg(src) {
         }
@@ -397,6 +396,7 @@ namespace cmd {
         }
     };
     using list = std::vector<cmd::ICommand*>;
+
 }
 
 
@@ -513,7 +513,7 @@ public:
         cmd::Code code = static_cast<cmd::Code>(opc[0]);
         auto search = decs.find(code);
         if (search != decs.end()) {
-            DecodingHandler dec = search->second;
+            auto dec = search->second;
             return dec(opc);
         }
         else {
@@ -522,39 +522,33 @@ public:
     }
 
     static cmd::ICommandPtr End_dec(Opcode opc) {
-        cmd::ICommand* cm = new cmd::End;
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::End>();
     }
 
     static cmd::ICommandPtr Ret_dec(Opcode opc) {
-        cmd::ICommand* cm = new cmd::Ret;
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::Ret>();
     }
 
     static cmd::ICommandPtr Leave_dec(Opcode opc) {
-        cmd::ICommand* cm = new cmd::Leave;
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::Leave>();
     }
 
     static cmd::ICommandPtr AddRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
-        cmd::ICommand* cm = new cmd::AddRR{dst_reg, src_reg};
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::AddRR>(dst_reg, src_reg);
     }
 
     static cmd::ICommandPtr AddRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word val = opc[2];
-        cmd::ICommand* cm = new cmd::AddRI{dst_reg, val};
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::AddRI>(dst_reg, val);
     }
 
     static cmd::ICommandPtr MovRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word val = opc[2];
-        cmd::ICommand* cm = new cmd::MovRI{dst_reg, val};
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::MovRI>(dst_reg, val);
     }
 
     static cmd::ICommandPtr MovRR_dec(Opcode opc) {
@@ -827,58 +821,45 @@ int main() {
     using namespace reg;
     //Fibonacci number n=19
     Block encodedProg = {
-         MOV_RI,	r1,	4   //int n = ...
+         MOV_RI,	r1,	19   //int n = ...
         ,CALL_I,	9,	0   // fib(n)
         ,END,	    0,	0
 
-        ,PUSH_R,	rbp,	0
+/* 9*/  ,PUSH_R,	rbp,	0
         ,MOV_RR,	rbp,	 rsp
         ,CMP_RI,	r1,	2   //if (n < 2)
         ,JL_I,	    54,	0   //  goto .done
 
         ,ADD_RI,	r1,	-1  
         ,PUSH_R,	r1,	0   
-        ,CALL_I,	9,	0   //fib(n-1)
+/*27*/  ,CALL_I,	9,	0   //fib(n-1)
 
         ,POP_R,	    r1,	0   
         ,PUSH_R ,	r0,	0
         ,ADD_RI,	r1,	-1
         ,CALL_I,	9,	0   //fib(n-2)
 
-        ,POP_R,	    r2,	0
+/*42*/  ,POP_R,	    r2,	0
         ,ADD_RR,	r0,	 r2 
 
         ,LEAVE,	    0,	0
         ,RET,	    0,	0
 
 //.done
-        ,MOV_RR,    r0, r1  //int result = n;
+/*54*/  ,MOV_RR,    r0, r1  //int result = n;
         ,LEAVE,	    0,	0   
         ,RET,	    0,	0   //return result
     };
 
     Memory mem{encodedProg};
     reg::Registers regs;
-#if 0    
-    Stack stack(mem, regs);
-    stack.push(100);
-    stack.push(200);
-    stack.push(300);
-    regs.dump();
-    mem.dump();
-    std::cout << stack.pop() << '\n';
-    std::cout << stack.pop() << '\n';
-    std::cout << stack.pop() << '\n';
 
-    regs.dump();
-    mem.dump();
-    
-#endif
-#if 1
+
     Processor proc{mem, regs};
     //proc.dump();
     proc.run();
     proc.dump();
-#endif
+
+
     return 0;
 }
