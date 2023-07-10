@@ -73,19 +73,38 @@ private:
 
 } //namespace reg
 
+template <typename It>
+void truncatePrint(It begin, It end, std::ostream& os, int width) {
+    size_t i = 0;
+    size_t k = 0;
+    for (auto it = begin; it != end; ) {
+        os << i << ":\t";
+        while (it != end && k != width) {
+            os << *it << '\t';
+            ++it; ++k; ++i;
+        }
+        k = 0;
+        std::cout << '\n';
+    }
+}
+
 class Memory {
 public:
     Memory(const std::vector<Word>& data) {
         data_.fill(0);
+        readStat_.fill(0);
+        writeStat_.fill(0);
         assert(data.size() < MEM_SIZE);
         std::copy(data.begin(), data.end(), data_.begin());
     }
 
     Word get(Address address) {
+        ++readStat_[address];
         return data_[address];
     }
 
     void set(Address address, Word word) {
+        ++writeStat_[address];
         data_[address] = word;
     }
 
@@ -96,19 +115,27 @@ public:
     void dump() {
         auto& os = std::cout;
         os << "Memory: \n";
-        for (size_t i = 0, k = 0; i < MEM_SIZE; ) {
-            os << i << ":\t"; 
-            while (i < MEM_SIZE && k != 3) {
-                os << data_[i++] << '\t';
-                ++k;
-            }
-            k = 0;
-            std::cout << '\n';
-        }
+        truncatePrint(data_.begin(), data_.end(), std::cout, 3);
     }
 
+    void dumpReadings() {
+        auto& os = std::cout;
+        os << "Readings of memory: \n";
+        truncatePrint(readStat_.begin(), readStat_.end(), std::cout, 3);        
+    }
+
+    void dumpWritings() {
+        auto& os = std::cout;
+        os << "Writing to memory: \n";
+        truncatePrint(writeStat_.begin(), writeStat_.end(), std::cout, 3);        
+    }
 private:
+
+
+
     std::array<Word, MEM_SIZE> data_;
+    std::array<size_t, MEM_SIZE> readStat_;
+    std::array<size_t, MEM_SIZE> writeStat_;
 };
 
 namespace cmd {
@@ -784,6 +811,8 @@ public:
         std::cout << "--------------Processor dump ---------------\n";
         regs_.dump();
         mem_.dump();
+        mem_.dumpReadings();
+        mem_.dumpWritings();
     }
 private:
     bool isActive_ = true;
@@ -798,27 +827,34 @@ int main() {
     using namespace reg;
     //Fibonacci number n=19
     Block encodedProg = {
-         MOV_RI,	r1,	19
-        ,CALL_I,	9,	0
+         MOV_RI,	r1,	4   //int n = ...
+        ,CALL_I,	9,	0   // fib(n)
         ,END,	    0,	0
+
         ,PUSH_R,	rbp,	0
         ,MOV_RR,	rbp,	 rsp
-        ,CMP_RI,	r1,	2
-        ,JL_I,	    54,	0
-        ,ADD_RI,	r1,	-1
-        ,PUSH_R,	r1,	0
-        ,CALL_I,	9,	0
-        ,POP_R,	    r1,	0
+        ,CMP_RI,	r1,	2   //if (n < 2)
+        ,JL_I,	    54,	0   //  goto .done
+
+        ,ADD_RI,	r1,	-1  
+        ,PUSH_R,	r1,	0   
+        ,CALL_I,	9,	0   //fib(n-1)
+
+        ,POP_R,	    r1,	0   
         ,PUSH_R ,	r0,	0
-        ,ADD_RI,	    r1,	-1
-        ,CALL_I,	9,	0
+        ,ADD_RI,	r1,	-1
+        ,CALL_I,	9,	0   //fib(n-2)
+
         ,POP_R,	    r2,	0
-        ,ADD_RR,	r0,	 r2
+        ,ADD_RR,	r0,	 r2 
+
         ,LEAVE,	    0,	0
         ,RET,	    0,	0
-        ,MOV_RR,    r0, r1
-        ,LEAVE,	    0,	0
-        ,RET,	    0,	0
+
+//.done
+        ,MOV_RR,    r0, r1  //int result = n;
+        ,LEAVE,	    0,	0   
+        ,RET,	    0,	0   //return result
     };
 
     Memory mem{encodedProg};
@@ -836,6 +872,7 @@ int main() {
 
     regs.dump();
     mem.dump();
+    
 #endif
 #if 1
     Processor proc{mem, regs};
