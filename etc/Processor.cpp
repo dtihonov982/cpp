@@ -12,7 +12,7 @@
 
 #define MEM_SIZE 128
 #define OPCODE_WC 3     //Opcode words count
-#define TIME_LIMIT 1000000
+#define TIME_LIMIT 1'000'000
 #define FLAGS_COUNT 8
 
 using Address   = int;
@@ -50,8 +50,8 @@ public:
         flags_[id] = p;
     }
 
-    void reset(FlagId id) {
-        flags_[id] = false;
+    void resetFlags() {
+        flags_.reset();
     }
 
     void dump() {
@@ -62,9 +62,9 @@ public:
         auto& os = std::cout;
         os << "Registers: \n";
         for (auto& [id, repr]: regsRepr) {
-            os << repr << ": " << regs_[id] << '\t';
+            os << repr << ": " << regs_[id] << '\n';
         }
-        os << '\n';
+        //os << '\n';
         os << "Flags: " << flags_.to_string() << '\n';
     }
 private:
@@ -77,21 +77,22 @@ private:
 template <typename It>
 void truncatePrint(It begin, It end, std::ostream& os, int width) {
     size_t i = 0;
-    size_t k = 0;
     for (auto it = begin; it != end; ) {
         os << i << ":\t";
-        while (it != end && k != width) {
+        for (size_t k = 0; it != end && k != width; ++k) {
             os << *it << '\t';
-            ++it; ++k; ++i;
+            ++it;
         }
-        k = 0;
+        i += width;
         std::cout << '\n';
     }
 }
 
+
+
 class Memory {
 public:
-    Memory(const std::vector<Word>& data) {
+    Memory(const Block& data) {
         data_.fill(0);
         readStat_.fill(0);
         writeStat_.fill(0);
@@ -116,25 +117,22 @@ public:
     void dump() {
         auto& os = std::cout;
         os << "Memory: \n";
-        truncatePrint(data_.begin(), data_.end(), std::cout, 3);
+        truncatePrint(data_.begin(), data_.end(), std::cout, OPCODE_WC);
     }
 
     void dumpReadings() {
         auto& os = std::cout;
         os << "Readings of memory: \n";
-        truncatePrint(readStat_.begin(), readStat_.end(), std::cout, 3);        
+        truncatePrint(readStat_.begin(), readStat_.end(), std::cout, OPCODE_WC);        
     }
 
     void dumpWritings() {
         auto& os = std::cout;
         os << "Writing to memory: \n";
-        truncatePrint(writeStat_.begin(), writeStat_.end(), std::cout, 3);        
+        truncatePrint(writeStat_.begin(), writeStat_.end(), std::cout, OPCODE_WC);        
     }
 private:
-
-
-
-    std::array<Word, MEM_SIZE> data_;
+    std::array<Word,   MEM_SIZE> data_;
     std::array<size_t, MEM_SIZE> readStat_;
     std::array<size_t, MEM_SIZE> writeStat_;
 };
@@ -155,30 +153,7 @@ namespace cmd {
     struct PopR;
     struct Leave;
     struct Ret;
-} //namespace cmd 
 
-class ICommandVisitor {
-public:
-    virtual void visit(cmd::End& cm)   = 0;
-    virtual void visit(cmd::AddRR& cm) = 0;
-    virtual void visit(cmd::AddRI& cm) = 0;
-    virtual void visit(cmd::MovRI& cm) = 0;
-    virtual void visit(cmd::MovRR& cm) = 0;
-    virtual void visit(cmd::CmpRI& cm)   = 0;
-    virtual void visit(cmd::JmpR& cm)   = 0;
-    virtual void visit(cmd::JmpI& cm)   = 0;
-    virtual void visit(cmd::Jz& cm)   = 0;
-    virtual void visit(cmd::JlessI& cm)   = 0;
-    virtual void visit(cmd::CallI& cm)   = 0;
-    virtual void visit(cmd::PushR& cm)   = 0;
-    virtual void visit(cmd::PopR& cm)   = 0;
-    virtual void visit(cmd::Leave& cm)   = 0;
-    virtual void visit(cmd::Ret& cm)   = 0;
-
-    virtual ~ICommandVisitor() {}
-};
-
-namespace cmd {
     enum Code { 
         END    = 0
       , ADD_RR = 10
@@ -196,7 +171,30 @@ namespace cmd {
       , RET
       , LEAVE
     };
+} //namespace cmd 
 
+class ICommandVisitor {
+public:
+    virtual void visit(cmd::End& cm)    = 0;
+    virtual void visit(cmd::AddRR& cm)  = 0;
+    virtual void visit(cmd::AddRI& cm)  = 0;
+    virtual void visit(cmd::MovRI& cm)  = 0;
+    virtual void visit(cmd::MovRR& cm)  = 0;
+    virtual void visit(cmd::CmpRI& cm)  = 0;
+    virtual void visit(cmd::JmpR& cm)   = 0;
+    virtual void visit(cmd::JmpI& cm)   = 0;
+    virtual void visit(cmd::Jz& cm)     = 0;
+    virtual void visit(cmd::JlessI& cm) = 0;
+    virtual void visit(cmd::CallI& cm)  = 0;
+    virtual void visit(cmd::PushR& cm)  = 0;
+    virtual void visit(cmd::PopR& cm)   = 0;
+    virtual void visit(cmd::Leave& cm)  = 0;
+    virtual void visit(cmd::Ret& cm)    = 0;
+
+    virtual ~ICommandVisitor() {}
+};
+
+namespace cmd {
 
     class ICommand {
     protected:
@@ -269,23 +267,16 @@ namespace cmd {
         , dst_reg(dst)
         , src_reg(src) {
         }
-
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
-        }
     };
 
-    struct JmpR: public ICommand {
+    struct JmpR: public ICommandHelper<JmpR> {
         reg::RegId reg;
 
         JmpR(reg::RegId reg_)
-        : ICommand(JMP_R)
+        : ICommandHelper<JmpR>(JMP_R)
         , reg(reg_) {
         }
-
-        void accept(ICommandVisitor* cv) override {
-            cv->visit(*this);
-        }        
+ 
     };
 
     struct JmpI: public ICommand {
@@ -554,8 +545,7 @@ public:
     static cmd::ICommandPtr MovRR_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         reg::RegId src_reg = static_cast<reg::RegId>(opc[2]);
-        cmd::ICommand* cm = new cmd::MovRR{dst_reg, src_reg};
-        return cmd::ICommandPtr{cm};
+        return std::make_unique<cmd::MovRR>(dst_reg, src_reg);
     }
 
     static cmd::ICommandPtr CmpRI_dec(Opcode opc) {
@@ -653,7 +643,6 @@ public:
         rsp--;
         mem_.set(rsp, data);
     }
-        
 private:
     Word& getRsp() {
         return regs_.get(reg::rsp);
@@ -665,12 +654,9 @@ private:
 
 class Processor: public ICommandVisitor {
 public:
-    
-    Processor(Memory& mem, reg::Registers& regs)
+    Processor(Memory& mem)
     : mem_(mem)
-    , regs_(regs) 
-    , stack_(mem_, regs_) 
-    {
+    , stack_(mem_, regs_) {
     }
 
     void run() {
@@ -680,18 +666,38 @@ public:
             Word rip_before = regs_.get(reg::rip);
             Opcode opc = getNextInstruction();
             auto cm = tr::Decoder::decode(opc);
+
+            //Command execution
             cm->accept(this);
+
             Word rip_after = regs_.get(reg::rip);
             //If command doesn't modifies rip, then go to the next command in memory
             if (rip_before == rip_after)
                 regs_.set(reg::rip, rip_before += OPCODE_WC);
         }
-        assert(t < TIME_LIMIT);
+        if (t >= TIME_LIMIT) std::cout << "Time limit exceeded! ";
         std::cout << "Clock: " << t << '\n';
     }
 
-    void initFrame() {
+    void dump() {
+        std::cout << "--------------Processor dump ---------------\n";
+        regs_.dump();
+        mem_.dump();
+        mem_.dumpReadings();
+        mem_.dumpWritings();
+    }
+private:
+   void initFrame() {
         regs_.set(reg::rbp, mem_.size());
+    }
+
+    void setFlagsFromResult(Word result) {
+        regs_.set(reg::ZF, result == 0);
+        regs_.set(reg::SF, result <  0);
+    }
+
+    void jump(Address addr) {
+        regs_.set(reg::rip, addr);
     }
 
     Opcode getNextInstruction() {
@@ -705,7 +711,7 @@ public:
         return opc;
     }
 
-    //TODO: SF flag
+    // Implementation ----------------------------------
     void visit(cmd::AddRR& cm) override {
         reg::RegId dst = cm.dst_reg;
         reg::RegId src = cm.src_reg;
@@ -713,8 +719,7 @@ public:
         Word src_v = regs_.get(src);
         dst_v += src_v;
         regs_.set(dst, dst_v);
-        if (dst_v == 0)
-            regs_.set(reg::ZF);
+        setFlagsFromResult(dst_v);
     }
 
     void visit(cmd::AddRI& cm) override {
@@ -723,8 +728,7 @@ public:
         Word src_v = cm.val_;
         dst_v += src_v;
         regs_.set(dst, dst_v);
-        if (dst_v == 0)
-            regs_.set(reg::ZF);
+        setFlagsFromResult(dst_v);
     }
 
     void visit(cmd::MovRI& cm) override {
@@ -746,27 +750,26 @@ public:
         reg::RegId reg = cm.reg_;
         Word reg_v = regs_.get(reg);
         Word tmp = reg_v - cm.val_;
-        regs_.set(reg::ZF, tmp == 0);
-        regs_.set(reg::SF, tmp < 0);
+        setFlagsFromResult(tmp);
     }
 
     void visit(cmd::JmpR& cm) override {
         auto addr = regs_.get(cm.reg);
-        regs_.set(reg::rip, addr);
+        jump(addr);
     }
 
     void visit(cmd::JmpI& cm) override {
-        regs_.set(reg::rip, cm.addr_);
+        jump(cm.addr_);
     }
 
     void visit(cmd::Jz& cm) override {
         if (regs_.get(reg::ZF))
-            regs_.set(reg::rip, cm.addr_);
+            jump(cm.addr_);
     }
 
     void visit(cmd::JlessI& cm) override {
         if (regs_.get(reg::SF))
-            regs_.set(reg::rip, cm.addr_);
+            jump(cm.addr_);
     }
 
     void visit(cmd::CallI& cm) override {
@@ -775,10 +778,6 @@ public:
         stack_.push(ret_addr);
         jump(cm.addr_);
 
-    }
-
-    void jump(Address addr) {
-        regs_.set(reg::rip, addr);
     }
 
     void visit(cmd::PushR& cm) override {
@@ -800,18 +799,10 @@ public:
         auto retAddr = stack_.pop();
         jump(retAddr);
     }
+    // ---------------------------------------------------
 
-    void dump() {
-        std::cout << "--------------Processor dump ---------------\n";
-        regs_.dump();
-        mem_.dump();
-        mem_.dumpReadings();
-        mem_.dumpWritings();
-    }
-private:
     bool isActive_ = true;
-    Word rip;
-    Memory mem_;
+    Memory& mem_;
     reg::Registers regs_;
     Stack stack_;
 };
@@ -852,10 +843,8 @@ int main() {
     };
 
     Memory mem{encodedProg};
-    reg::Registers regs;
 
-
-    Processor proc{mem, regs};
+    Processor proc{mem};
     //proc.dump();
     proc.run();
     proc.dump();
