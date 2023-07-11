@@ -2,7 +2,6 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
-
 #include <vector>
 #include <array>
 #include <map>
@@ -138,38 +137,52 @@ private:
 };
 
 namespace cmd {
+    struct End;
+
     struct AddRR;
     struct AddRI;
+
     struct CmpRI;
-    struct End;
+
     struct JmpR;
     struct JmpI;
     struct Jz;
     struct JlessI;
+
     struct CallI;
+
     struct MovRI;
     struct MovRR;
+
     struct PushR;
     struct PopR;
+
     struct Leave;
     struct Ret;
 
     enum Code { 
         END    = 0
+
       , ADD_RR = 10
-      , ADD_RI = 11
+      , ADD_RI
+
       , MOV_RR = 20
       , MOV_RI = 21
-      , CMP_RI = 31
+
+      , CMP_RI = 41
+
       , JMP_R  = 50
       , JMP_I
       , JZ
       , JL_I
-      , CALL_I
+
+      , CALL_I = 60
+
       , PUSH_R = 70
       , POP_R  
-      , RET
-      , LEAVE
+
+      , LEAVE  = 100
+      , RET 
     };
 } //namespace cmd 
 
@@ -810,7 +823,7 @@ private:
 int main() {
     using namespace cmd;
     using namespace reg;
-    //Fibonacci number n=19
+    //Fibonacci number n=19. r0 = f(r1)
     Block encodedProg = {
          MOV_RI,	r1,	19   //int n = ...
         ,CALL_I,	9,	0   // fib(n)
