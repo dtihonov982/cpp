@@ -50,9 +50,10 @@ Benchmark writeFile(int fd, size_t fileSize, size_t bufferSize) {
 
 int main() {
     int fd = creat("test.dat", 0);
-    for (int i = 32; i < 8*Kb; i <<= 1)
+    //for (int i = 64; i <= 128*Kb; i <<= 1)
+    for (int i = Mb; i >= 64; i >>= 1)
     //for (int i = 512; i <= 16*Kb; i += 512)
-        writeFile(fd, 10 * Mb, i);
+        writeFile(fd, 1 * Mb, i);
     close(fd);
     //std::cout << std::accumulate(result.begin(), result.end(), 0) << '\n';
     //std::cout << result.size() << '\n';
