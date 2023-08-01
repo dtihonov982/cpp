@@ -1,3 +1,9 @@
+//Reverse proxy for PostgreSQL 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1) with query logging
+//Build: g++ -o proxy main.cpp
+//Possible usage: 
+//1. Start this program on proxy server: proxy 127.0.0.1 5432 9999
+//2. Start client: psql postgresql://localhost:9999/dvdrental?sslmode=disable
+
 #include "Proxy.h"
 #include <fstream>
 #include <cstdlib>
