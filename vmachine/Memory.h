@@ -24,6 +24,8 @@ void truncatePrint(It begin, It end, std::ostream& os, int width) {
 class Memory {
 public:
     Memory(const Block& data) {
+        //If memory initialized by nulls, programm more predictable.
+        //Also binary code of End comand is 0 so errors will stop programm.
         data_.fill(0);
         readStat_.fill(0);
         writeStat_.fill(0);
@@ -64,7 +66,10 @@ public:
     }
 private:
     std::array<Word,   MEM_SIZE> data_;
+    //Statistics of reading for each memory address
+    //For text segment - code coverage
     std::array<size_t, MEM_SIZE> readStat_;
+    //Statistics of reading for writing in each memory address
     std::array<size_t, MEM_SIZE> writeStat_;
 };
 
