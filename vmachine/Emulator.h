@@ -10,6 +10,7 @@
 #include "Translate.h"
 #include "Commands.h"
 
+//Stack is a simple interface of registers and memory for instructions Push, Pop, Call etc.
 class Stack {
 public:
     Stack(Memory& mem, reg::Registers& regs)
@@ -75,7 +76,7 @@ public:
         mem_.dumpWritings();
     }
 private:
-   void initFrame() {
+    void initFrame() {
         regs_.set(reg::rbp, mem_.size());
     }
 
