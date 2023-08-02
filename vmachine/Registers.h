@@ -42,10 +42,12 @@ public:
     }
 
     void dump() {
+        //Registers values stores in inordered map so need to store order of printing somethere else.
         static const std::vector<std::pair<RegId, std::string>> regsRepr {
                     {r0, "r0"}, {r1, "r1"}, {r2, "r2"}, {r3, "r3"}
                   , {rip, "rip"}, {rsp, "rsp"}, {rbp, "rbp"}
                 };
+        //Maybe dumps will get ostream argument in future...
         auto& os = std::cout;
         os << "Registers: \n";
         for (auto& [id, repr]: regsRepr) {
