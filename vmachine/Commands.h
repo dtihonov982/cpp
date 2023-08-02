@@ -5,8 +5,13 @@
 #include "Definitions.h"
 #include "Registers.h"
 
+//Forward declaration command for ICommandVisitor declaration 
 namespace cmd {
     struct End;
+
+    //Addressation modes:
+    //R - register
+    //I - immediate
 
     struct AddRR;
     struct AddRI;
@@ -16,6 +21,8 @@ namespace cmd {
     struct JmpR;
     struct JmpI;
     struct Jz;
+
+    //It is hard to read JlI so JlessI
     struct JlessI;
 
     struct CallI;
@@ -29,6 +36,8 @@ namespace cmd {
     struct Leave;
     struct Ret;
 
+    //Codes uses for encode and decode commands from binary code
+    //TODO: move to translate namespace
     enum Code { 
         END    = 0
 
@@ -55,6 +64,7 @@ namespace cmd {
     };
 } //namespace cmd 
 
+//Use visitor pattern to avoid switch-case in command handlers
 class ICommandVisitor {
 public:
     virtual void visit(cmd::End& cm)    = 0;
@@ -87,6 +97,7 @@ namespace cmd {
         virtual ~ICommand() {}
     };
 
+    //This helper class allows to not wirte accept method in each command
     template <typename Derived>
     class ICommandHelper: public ICommand {
     public:
@@ -99,12 +110,14 @@ namespace cmd {
 
     using ICommandPtr = std::unique_ptr<cmd::ICommand>;
 
+    //Stop programm execution
     struct End: public ICommandHelper<End> {
         End()
         : ICommandHelper<End>(END) {
         }
     };
 
+    //Add values of two registers and store result in the first register
     struct AddRR: public ICommandHelper<AddRR> {
         reg::RegId dst_reg;
         reg::RegId src_reg;
