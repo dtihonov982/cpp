@@ -8,7 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace tr { //translate
+namespace tr { //tr means translate
 
 class Encoder: public ICommandVisitor {
 public:
