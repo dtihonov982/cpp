@@ -1,5 +1,5 @@
 //Modern Operating Systems (4th Edition) by Andrew S. Tanenbaum Herbert Bos
-//p.367 ex. 47 "The mpact of application level buffer size"
+//p.367 ex. 47 "The impact of application level buffer size"
 
 #include <fcntl.h>
 #include <unistd.h>
