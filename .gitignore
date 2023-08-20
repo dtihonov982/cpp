@@ -11,3 +11,4 @@
 *.sh
 *.log
 a.out
+build
