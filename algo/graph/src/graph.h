@@ -6,6 +6,7 @@
 #define GRAPH_H
 
 #include <stdbool.h>
+#include "queue.h"
 
 #define MAXV 1000
 
@@ -27,8 +28,10 @@ struct edgenode {
 
 
 void initialize_graph(graph *g, bool directed);
+void free_graph(graph *g);
 void read_graph(graph *g, bool directed);
 void insert_edge(graph *g, int x, int y, bool directed);
 void print_graph(const graph *g);
+void bfs(const graph *g, int start);
 
 #endif //GRAPH_H

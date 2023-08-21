@@ -15,6 +15,22 @@ void initialize_graph(graph *g, bool directed) {
     }
 }
 
+void free_adj_list(edgenode *p) {
+    edgenode *tmp;
+    while (p != NULL) {
+        tmp = p->next;
+        free(p);
+        p = tmp;
+    }
+}
+
+void free_graph(graph *g) {
+    int i;
+    for (i = 1; i <= g->nvertices; i++) {
+        free_adj_list(g->edges[i]);
+    }
+}
+
 void read_graph(graph *g, bool directed) {
     int i;
     int m;
@@ -58,6 +74,52 @@ void print_graph(const graph *g) {
             p = p->next;
         }
         printf("\n");
+    }
+}
+
+void process_vertex_early(int v) {
+    printf("Early processing of vertex = %d\n", v);
+}
+
+void process_vertex_late(int v) {
+    printf("Late processing of vertex = %d\n", v);
+}
+
+void process_edge(int v, int y) {
+    printf("Processing of edge = (%d,%d)\n", v, y);
+}
+
+void bfs(const graph *g, int start) {
+    int i;
+    bool processed[MAXV + 1] = {false};
+    bool discovered[MAXV + 1] = {false};
+    int parent[MAXV + 1] = {-1};
+    queue q;
+    int v;
+    int y;
+    edgenode *p;
+
+    init_queue(&q);
+    enqueue(&q, start);
+    discovered[start] = true;
+
+    while (!empty_queue(&q)) {
+        v = dequeue(&q);
+        process_vertex_early(v);
+        processed[v] = true;
+        p = g->edges[v];
+        while (p != NULL) {
+            y = p->y;
+            if (!processed[y] || g->directed)
+                process_edge(v, y);
+            if (!discovered[y]) {
+                enqueue(&q, y);
+                discovered[y] = true;
+                parent[y] = v;
+            }
+            p = p->next;
+        }
+        process_vertex_late(v);
     }
 }
 
