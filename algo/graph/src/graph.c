@@ -77,15 +77,16 @@ void print_graph(const graph *g) {
 }
 
 void process_vertex_early(int v) {
-    printf("Early processing of vertex = %d\n", v);
+    //printf("Early processing of vertex = %d\n", v);
+    printf(" %d", v);
 }
 
 void process_vertex_late(int v) {
-    printf("Late processing of vertex = %d\n", v);
+    //printf("Late processing of vertex = %d\n", v);
 }
 
 void process_edge(int v, int y) {
-    printf("Processing of edge = (%d,%d)\n", v, y);
+    //printf("Processing of edge = (%d,%d)\n", v, y);
 }
 
 bool processed[MAXV + 1];
@@ -138,5 +139,22 @@ void print_path(int start, int end) {
     else {
         print_path(start, parent[end]);
         printf(" %d", end);
+    }
+}
+
+void connected_components(const graph *g) {
+    int c;
+    int i;
+
+    initialize_search(g);
+
+    c = 0;
+    for (i = 1; i <= g->nvertices; i++) {
+        if (!discovered[i]) {
+            c++;
+            printf("Component %d: ", c);
+            bfs(g, i);
+            printf("\n");
+        }
     }
 }

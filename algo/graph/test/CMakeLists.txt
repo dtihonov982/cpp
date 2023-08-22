@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-set (SRCS io.c
-          queue_test.c
+set (SRCS queue_test.c
           bfs.c
           path.c
 )
