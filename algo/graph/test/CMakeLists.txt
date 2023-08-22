@@ -1,16 +1,14 @@
 cmake_minimum_required(VERSION 3.25)
-add_executable(io io.c)
-target_link_libraries(io PRIVATE graph)
-target_include_directories(graph PUBLIC "${PROJECT_SOURCE_DIR}/src")
+set (SRCS io.c
+          queue_test.c
+          bfs.c
+          path.c
+)
 
-add_executable(queue_test queue_test.c)
-target_link_libraries(queue_test PRIVATE queue)
-target_include_directories(queue_test PUBLIC "${PROJECT_SOURCE_DIR}/src")
-
-add_executable(bfs bfs.c)
-target_link_libraries(bfs PRIVATE graph)
-target_include_directories(bfs PUBLIC "${PROJECT_SOURCE_DIR}/src")
-
-add_executable(path path.c)
-target_link_libraries(path PRIVATE graph)
-target_include_directories(path PUBLIC "${PROJECT_SOURCE_DIR}/src")
+foreach (SRC IN LISTS SRCS)
+    string (REPLACE ".c" "" TGT ${SRC})
+    message (STATUS ${TGT})
+    add_executable(${TGT} ${SRC})
+    target_link_libraries(${TGT} PRIVATE graph)
+    target_include_directories(${TGT} PUBLIC "${PROJECT_SOURCE_DIR}/src")
+endforeach ()
