@@ -10,3 +10,7 @@ target_include_directories(queue_test PUBLIC "${PROJECT_SOURCE_DIR}/src")
 add_executable(bfs bfs.c)
 target_link_libraries(bfs PRIVATE graph)
 target_include_directories(bfs PUBLIC "${PROJECT_SOURCE_DIR}/src")
+
+add_executable(path path.c)
+target_link_libraries(path PRIVATE graph)
+target_include_directories(path PUBLIC "${PROJECT_SOURCE_DIR}/src")

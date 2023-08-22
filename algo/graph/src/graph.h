@@ -32,6 +32,8 @@ void free_graph(graph *g);
 void read_graph(graph *g, bool directed);
 void insert_edge(graph *g, int x, int y, bool directed);
 void print_graph(const graph *g);
+void initialize_search(const graph *g);
 void bfs(const graph *g, int start);
+void print_path(int start, int end);
 
 #endif //GRAPH_H

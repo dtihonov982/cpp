@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 void initialize_graph(graph *g, bool directed) {
     int i;
     g->nvertices = 0;
@@ -89,11 +88,20 @@ void process_edge(int v, int y) {
     printf("Processing of edge = (%d,%d)\n", v, y);
 }
 
+bool processed[MAXV + 1];
+bool discovered[MAXV + 1];
+int parent[MAXV + 1];
+
+void initialize_search(const graph *g) {
+    int i;
+    for (i = 1; i <= g->nvertices; i++) {
+        processed[i] = discovered[i] = false;
+        parent[i] = -1;
+    }
+}
+
 void bfs(const graph *g, int start) {
     int i;
-    bool processed[MAXV + 1] = {false};
-    bool discovered[MAXV + 1] = {false};
-    int parent[MAXV + 1] = {-1};
     queue q;
     int v;
     int y;
@@ -123,3 +131,12 @@ void bfs(const graph *g, int start) {
     }
 }
 
+void print_path(int start, int end) {
+    if (start == end || end == -1) {
+        printf("%d", start);
+    }
+    else {
+        print_path(start, parent[end]);
+        printf(" %d", end);
+    }
+}
