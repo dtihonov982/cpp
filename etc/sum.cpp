@@ -22,13 +22,16 @@ private:
     std::string title_;
 };
 
-int main(int argc, char** argv) {
-    if (argc < 3) 
+int main(int argc, char** argv) 
+try {
+    if (argc < 3) {
+        std::cerr << "Usage: sum <data size> <threads count>\n";
         return 1;
+    }
     int dataSize = std::stoi(argv[1]);
+    int maxThreadsCount = std::stoi(argv[2]);
     auto data = getRandVector(dataSize, -1000000, 1000000);
     int64_t result = std::accumulate(data.begin(), data.end(), int64_t{});
-    int maxThreadsCount = std::stoi(argv[2]);
     Table table("Count\tMs");
     for (int i = maxThreadsCount; i > 0; --i) {
         auto start = std::chrono::high_resolution_clock::now();
@@ -43,15 +46,20 @@ int main(int argc, char** argv) {
     table.print();
     return 0;
 }
+catch(const std::invalid_argument& ex) {
+    std::cerr << "Invalid argument of the program. ";
+    std::cerr << ex.what() << std::endl;
+    return 1;
+}
 
 int64_t sum(It begin, It end, size_t threadsCount) {
     int size = end - begin;
     if (size < 0)
-        throw std::invalid_argument("begin < end");
+        throw std::invalid_argument("data size < 0");
     if (size == 0)
         return 0;
     if (size < threadsCount)
-        throw std::invalid_argument("size < threads count");
+        throw std::invalid_argument("data size < threads count");
     int maxChunk = size % threadsCount ? size / threadsCount + 1 : size / threadsCount;
     std::vector<int64_t> subresults(threadsCount);
     std::vector<std::thread> threads;
