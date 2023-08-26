@@ -36,5 +36,6 @@ void initialize_search(const graph *g);
 void bfs(const graph *g, int start);
 void print_path(int start, int end);
 void connected_components(const graph *g);
+void dfs(const graph *g, int v);
 
 #endif //GRAPH_H

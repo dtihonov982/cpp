@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 set (SRCS queue_test.c
           bfs.c
+          dfs.c
           path.c
 )
 

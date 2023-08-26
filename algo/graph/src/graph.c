@@ -3,6 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+bool processed[MAXV + 1];
+bool discovered[MAXV + 1];
+int parent[MAXV + 1];
+//only dfs
+bool finished;
+int entry_time[MAXV + 1];
+int exit_time[MAXV + 1];
+int time;
+
 void initialize_graph(graph *g, bool directed) {
     int i;
     g->nvertices = 0;
@@ -89,10 +98,6 @@ void process_edge(int v, int y) {
     //printf("Processing of edge = (%d,%d)\n", v, y);
 }
 
-bool processed[MAXV + 1];
-bool discovered[MAXV + 1];
-int parent[MAXV + 1];
-
 void initialize_search(const graph *g) {
     int i;
     for (i = 1; i <= g->nvertices; i++) {
@@ -158,3 +163,31 @@ void connected_components(const graph *g) {
         }
     }
 }
+
+void dfs(const graph *g, int v) {
+    edgenode *p;
+    int y;
+    if (finished) return;
+    discovered[v] = true;
+    time = time + 1;
+    entry_time[v] = time;
+    process_vertex_early(v);
+    p = g->edges[v];
+    while (p != NULL) {
+        y = p->y;
+        if (discovered[y] == false) {
+            parent[y] = v;
+            process_edge(v, y);
+            dfs(g, y);
+        }
+        else if (!processed[y] || g->directed)
+            process_edge(v, y);
+        if (finished) return;
+        p = p->next;
+    }
+    process_vertex_late(v);
+    time = time + 1;
+    exit_time[v] = time;
+    processed[v] = true;
+}
+
