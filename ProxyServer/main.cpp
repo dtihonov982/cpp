@@ -4,7 +4,7 @@
 //1. Start this program on proxy server: proxy 127.0.0.1 5432 9999
 //2. Start client: psql postgresql://localhost:9999/dvdrental?sslmode=disable
 
-#include "Proxy.h"
+#include "ProxyServer.h"
 #include <fstream>
 #include <cstdlib>
 #include <string_view>
