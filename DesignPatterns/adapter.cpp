@@ -63,11 +63,11 @@ public:
             std::cout << "Playing mp3 file. Name: " << fileName << '\n';
         }
         else if (audioType == "vlc" || audioType == "mp4") {
-            auto mediaAdapter = new MediaAdapter(audioType);
+            auto mediaAdapter = std::make_unique<MediaAdapter>(audioType);
             mediaAdapter->play(audioType, fileName);
         }
         else {
-            std::cout << "Invalid media. " << audioType << " format not supported.";
+            std::cout << "Invalid media. " << audioType << " format not supported.\n";
         }
     }
 };

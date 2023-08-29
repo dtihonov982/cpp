@@ -28,10 +28,10 @@ public:
 
 class ShapeDecorator: public Shape {
 protected:
-    Shape* decoratedShape_;
+    ShapePtr decoratedShape_;
 public:
-    ShapeDecorator(Shape* decoratedShape)
-    : decoratedShape_(decoratedShape) {
+    ShapeDecorator(ShapePtr&& decoratedShape)
+    : decoratedShape_(std::move(decoratedShape)) {
     }
     void draw() override {
         decoratedShape_->draw();
@@ -41,8 +41,8 @@ public:
 
 class RedShapeDecorator: public ShapeDecorator {
 public:
-    RedShapeDecorator(Shape* decoratedShape)
-    : ShapeDecorator(decoratedShape) {
+    RedShapeDecorator(ShapePtr&& decoratedShape)
+    : ShapeDecorator(std::move(decoratedShape)) {
     }
     void draw() override {
         decoratedShape_->draw();
@@ -56,9 +56,8 @@ public:
 
 int main() {
     ShapePtr circle(new Circle());
-    //Memory leak
-    ShapePtr redCircle(new RedShapeDecorator(new Circle));
-    ShapePtr redRectangle(new RedShapeDecorator(new Rectangle()));
+    ShapePtr redCircle = std::make_unique<RedShapeDecorator>(std::make_unique<Circle>());
+    ShapePtr redRectangle = std::make_unique<RedShapeDecorator>(std::make_unique<Rectangle>());
 
 
     std::cout << "Circle with normal border " << '\n';

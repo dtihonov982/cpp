@@ -7,6 +7,8 @@ public:
     virtual ~DrawAPI() {}
 };
 
+using DrawAPIPtr = std::shared_ptr<DrawAPI>;
+
 
 class RedCircle: public DrawAPI {
 public:
@@ -29,8 +31,8 @@ public:
     virtual void draw() = 0;
     virtual ~Shape() {}
 protected:
-    DrawAPI* drawAPI_;
-    Shape(DrawAPI* drawAPI) {
+    DrawAPIPtr drawAPI_;
+    Shape(DrawAPIPtr drawAPI) {
         drawAPI_ = drawAPI;
     }
 };
@@ -39,7 +41,7 @@ typedef std::unique_ptr<Shape> ShapePtr;
 
 class Circle: public Shape {
 public:
-    Circle(int x, int y, int radius, DrawAPI* drawAPI)
+    Circle(int x, int y, int radius, const DrawAPIPtr& drawAPI)
     : Shape(drawAPI)
     , x_(x), y_(y), radius_(radius) {
     }
@@ -54,8 +56,10 @@ private:
 };
 
 int main() {
-    ShapePtr redCircle(new Circle(101, 102, 10, new RedCircle()));
-    ShapePtr greenCircle(new Circle(201, 202, 20, new GreenCircle()));
+    auto red = std::make_shared<RedCircle>();
+    ShapePtr redCircle(new Circle(101, 102, 10, red));
+    auto green = std::make_shared<GreenCircle>();
+    ShapePtr greenCircle(new Circle(201, 202, 20, green));
     redCircle->draw();
     greenCircle->draw();
     return 0;
