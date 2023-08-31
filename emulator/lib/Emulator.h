@@ -54,7 +54,7 @@ public:
         int t;
         for (t = 0; isActive_ && t < TIME_LIMIT; ++t) {
             Word rip_before = regs_.get(reg::rip);
-            Opcode opc = getNextInstruction();
+            Opcode opc = loadInstruction();
             auto cm = tr::Decoder::decode(opc);
 
             //Command execution
@@ -91,7 +91,7 @@ private:
         regs_.set(reg::rip, addr);
     }
 
-    Opcode getNextInstruction() {
+    Opcode loadInstruction() {
         assert(isActive_);
         Word instrAddr = regs_.get(reg::rip);
         assert(instrAddr <= mem_.size() - OPCODE_WC);
