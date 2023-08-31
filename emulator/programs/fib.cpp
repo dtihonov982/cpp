@@ -43,7 +43,7 @@ int main() {
 
     Memory mem{encodedProg};
 
-    Processor proc{mem};
+    Emulator proc{mem};
     //proc.dump();
     proc.run();
     proc.dump();

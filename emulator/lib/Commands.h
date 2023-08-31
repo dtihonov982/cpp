@@ -29,6 +29,7 @@ namespace cmd {
 
     struct MovRI;
     struct MovRR;
+    struct MovRM;
 
     struct PushR;
     struct PopR;
@@ -45,7 +46,8 @@ namespace cmd {
       , ADD_RI
 
       , MOV_RR = 20
-      , MOV_RI = 21
+      , MOV_RI
+      , MOV_RM
 
       , CMP_RI = 41
 
@@ -72,6 +74,7 @@ public:
     virtual void visit(cmd::AddRI& cm)  = 0;
     virtual void visit(cmd::MovRI& cm)  = 0;
     virtual void visit(cmd::MovRR& cm)  = 0;
+    virtual void visit(cmd::MovRM& cm)  = 0;
     virtual void visit(cmd::CmpRI& cm)  = 0;
     virtual void visit(cmd::JmpR& cm)   = 0;
     virtual void visit(cmd::JmpI& cm)   = 0;
@@ -161,6 +164,17 @@ namespace cmd {
         : ICommandHelper<MovRR>(MOV_RR)
         , dst_reg(dst)
         , src_reg(src) {
+        }
+    };
+
+    struct MovRM: public ICommandHelper<MovRM> {
+        reg::RegId dst_reg;
+        Address src_addr;
+
+        MovRM(reg::RegId dst, Address src)
+        : ICommandHelper<MovRM>(MOV_RM)
+        , dst_reg(dst)
+        , src_addr(src) {
         }
     };
 
@@ -281,6 +295,7 @@ namespace cmd {
             cv->visit(*this);
         }
     };
+
     using list = std::vector<cmd::ICommand*>;
 
 }

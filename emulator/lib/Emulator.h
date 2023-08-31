@@ -10,7 +10,7 @@
 #include "Translate.h"
 #include "Commands.h"
 
-//Stack is a simple interface of registers and memory for instructions Push, Pop, Call etc.
+//Stack is a simple interface to registers and memory for instructions Push, Pop, Call etc.
 class Stack {
 public:
     Stack(Memory& mem, reg::Registers& regs)
@@ -32,6 +32,7 @@ public:
         rsp--;
         mem_.set(rsp, data);
     }
+
 private:
     Word& getRsp() {
         return regs_.get(reg::rsp);
@@ -41,9 +42,9 @@ private:
     reg::Registers& regs_;
 };
 
-class Processor: public ICommandVisitor {
+class Emulator: public ICommandVisitor {
 public:
-    Processor(Memory& mem)
+    Emulator(Memory& mem)
     : mem_(mem)
     , stack_(mem_, regs_) {
     }
@@ -65,15 +66,16 @@ public:
                 regs_.set(reg::rip, rip_before += OPCODE_WC);
         }
         if (t >= TIME_LIMIT) std::cout << "Time limit exceeded! ";
-        std::cout << "Clock: " << t << '\n';
+        //std::cout << "Clock: " << t << '\n';
     }
 
     void dump() {
         std::cout << "--------------Processor dump ---------------\n";
         regs_.dump();
         mem_.dump();
-        mem_.dumpReadings();
-        mem_.dumpWritings();
+    }
+    const reg::Registers& getRegs() {
+        return regs_;
     }
 private:
     void initFrame() {
@@ -127,6 +129,11 @@ private:
 
     void visit(cmd::MovRR& cm) override {
         auto src_v = regs_.get(cm.src_reg);
+        regs_.set(cm.dst_reg, src_v);
+    }
+
+    void visit(cmd::MovRM& cm) override {
+        auto src_v = mem_.get(cm.src_addr);
         regs_.set(cm.dst_reg, src_v);
     }
 

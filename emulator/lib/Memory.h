@@ -49,19 +49,19 @@ public:
 
     void dump() {
         auto& os = std::cout;
-        os << "Memory: \n";
+        os << "Memory state: \n";
         truncatePrint(data_.begin(), data_.end(), std::cout, OPCODE_WC);
     }
 
     void dumpReadings() {
         auto& os = std::cout;
-        os << "Readings of memory: \n";
+        os << "Number of memory reads: \n";
         truncatePrint(readStat_.begin(), readStat_.end(), std::cout, OPCODE_WC);        
     }
 
     void dumpWritings() {
         auto& os = std::cout;
-        os << "Writing to memory: \n";
+        os << "Number of memory writes: \n";
         truncatePrint(writeStat_.begin(), writeStat_.end(), std::cout, OPCODE_WC);        
     }
 private:

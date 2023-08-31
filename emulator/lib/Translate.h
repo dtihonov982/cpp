@@ -47,6 +47,11 @@ public:
         append(opcode);
     }
 
+    void visit(cmd::MovRM& cm) override {
+        Opcode opcode = {cm.code_, cm.dst_reg, cm.src_addr};
+        append(opcode);
+    }
+
     void visit(cmd::JmpR& cm) override {
         Opcode opcode = {cm.code_, cm.reg, 0};
         append(opcode);
@@ -165,6 +170,12 @@ public:
         return std::make_unique<cmd::MovRR>(dst_reg, src_reg);
     }
 
+    static cmd::ICommandPtr MovRM_dec(Opcode opc) {
+        reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
+        reg::RegId src_addr = static_cast<reg::RegId>(opc[2]);
+        return std::make_unique<cmd::MovRM>(dst_reg, src_addr);
+    }
+
     static cmd::ICommandPtr CmpRI_dec(Opcode opc) {
         reg::RegId dst_reg = static_cast<reg::RegId>(opc[1]);
         Word  val = static_cast<Word>(opc[2]);
@@ -225,6 +236,7 @@ const std::unordered_map<cmd::Code, DecodingHandler> Decoder::decs {
     , {cmd::ADD_RI,       AddRI_dec}
     , {cmd::MOV_RR,       MovRR_dec}
     , {cmd::MOV_RI,       MovRI_dec}
+    , {cmd::MOV_RM,       MovRM_dec}
     , {cmd::JMP_R,        JmpR_dec} 
     , {cmd::JMP_I,        JmpI_dec} 
     , {cmd::JZ,           Jz_dec} 
