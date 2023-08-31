@@ -92,7 +92,7 @@ void getExtreme_fix(const std::vector<T>& data, T& min, T& max) {
 std::vector<int> getRandVector(int size) {
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+    std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
 
     std::vector<int> res;
     res.resize(size);
@@ -130,7 +130,7 @@ public:
     
 protected:
     std::mt19937 rng;
-    std::uniform_int_distribution<std::mt19937::result_type> valueDist;
+    std::uniform_int_distribution<int> valueDist;
 };
 
 //Generator of random string with fixed size or size in [minSize; maxSize]
