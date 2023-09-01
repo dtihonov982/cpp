@@ -38,4 +38,8 @@ void print_path(int start, int end);
 void connected_components(const graph *g);
 void dfs(const graph *g, int v);
 
+typedef void (*edge_processor_t)(int, int);
+typedef void (*vertex_processor_t)(int);
+bool twocolor(graph* g);
+
 #endif //GRAPH_H

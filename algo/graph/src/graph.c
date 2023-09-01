@@ -11,6 +11,13 @@ bool finished;
 int entry_time[MAXV + 1];
 int exit_time[MAXV + 1];
 int time;
+// bipartite
+bool bipartite = true;
+int color[MAXV + 1];
+#define WHITE 1
+#define BLACK 0
+#define UNCOLORED -1
+
 
 void initialize_graph(graph *g, bool directed) {
     int i;
@@ -104,9 +111,14 @@ void initialize_search(const graph *g) {
         processed[i] = discovered[i] = false;
         parent[i] = -1;
     }
+
 }
 
-void bfs(const graph *g, int start) {
+void bfs_impl(const graph *g,
+              int start, 
+              edge_processor_t process_edge,
+              vertex_processor_t process_vertex_early,
+              vertex_processor_t process_vertex_late) {
     int i;
     queue q;
     int v;
@@ -135,6 +147,10 @@ void bfs(const graph *g, int start) {
         }
         process_vertex_late(v);
     }
+}
+
+void bfs(const graph *g, int start) {
+    bfs_impl(g, start, process_edge, process_vertex_early, process_vertex_late);
 }
 
 void print_path(int start, int end) {
@@ -189,5 +205,36 @@ void dfs(const graph *g, int v) {
     time = time + 1;
     exit_time[v] = time;
     processed[v] = true;
+}
+
+int complement(int color) {
+    if (color == WHITE) return BLACK;
+    if (color == BLACK) return WHITE;
+    return UNCOLORED;
+}
+
+void process_edge_bipartite(int x, int y) {
+    if (color[x] == color[y]) {
+        bipartite = false;
+    }
+    color[y] = complement(color[x]);
+}
+
+bool twocolor(graph* g) {
+    int i;
+    for (i = 1; i <= g->nvertices; ++i)
+        color[i] = UNCOLORED;
+    bipartite = true;
+    initialize_search(g);
+    for (i = 1; i <= g->nvertices; ++i) {
+        if (discovered[i] == false) {
+            color[i] = WHITE;
+            bfs_impl(g, i, 
+                process_edge_bipartite, 
+                process_vertex_early, 
+                process_vertex_late);
+        }
+    }
+    return bipartite;
 }
 

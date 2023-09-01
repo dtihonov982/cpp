@@ -3,6 +3,7 @@ set (SRCS queue_test.c
           bfs.c
           dfs.c
           path.c
+          twocolor.c
 )
 
 foreach (SRC IN LISTS SRCS)
