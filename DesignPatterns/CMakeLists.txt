@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 3.25)
+project (DesignPatterns)
+
 set (SRCS adapter.cpp
           bridge.cpp
+          factory.cpp
+          abstract_factory.cpp
           builder.cpp
           chain.cpp
           decorator.cpp
@@ -13,4 +17,6 @@ set (SRCS adapter.cpp
 foreach (SRC IN LISTS SRCS)
     string (REPLACE ".cpp" "" TGT ${SRC})
     add_executable(${TGT} ${SRC})
+    target_compile_options (${TGT} PUBLIC -fsanitize=address)
+    target_link_options (${TGT} PUBLIC -fsanitize=address)
 endforeach ()
