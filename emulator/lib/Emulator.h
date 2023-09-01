@@ -5,10 +5,10 @@
 #include <array>
 
 #include "Definitions.h"
+#include "Commands.h"
 #include "Registers.h"
 #include "Memory.h"
 #include "Translate.h"
-#include "Commands.h"
 
 //Stack is a simple interface to registers and memory for instructions Push, Pop, Call etc.
 class Stack {
@@ -49,25 +49,7 @@ public:
     , stack_(mem_, regs_) {
     }
 
-    void run() {
-        initFrame();
-        int t;
-        for (t = 0; isActive_ && t < TIME_LIMIT; ++t) {
-            Word rip_before = regs_.get(reg::rip);
-            Opcode opc = loadInstruction();
-            auto cm = tr::Decoder::decode(opc);
-
-            //Command execution
-            cm->accept(this);
-
-            Word rip_after = regs_.get(reg::rip);
-            //If command doesn't modifies rip, then go to the next command in memory
-            if (rip_before == rip_after)
-                regs_.set(reg::rip, rip_before += OPCODE_WC);
-        }
-        if (t >= TIME_LIMIT) std::cout << "Time limit exceeded! ";
-        //std::cout << "Clock: " << t << '\n';
-    }
+    void run();
 
     void dump() {
         std::cout << "--------------Processor dump ---------------\n";
@@ -130,6 +112,12 @@ private:
     void visit(cmd::MovRR& cm) override {
         auto src_v = regs_.get(cm.src_reg);
         regs_.set(cm.dst_reg, src_v);
+    }
+
+    void visit(cmd::MovRRm& cm) override {
+        auto addr = regs_.get(cm.src_reg);
+        auto val = mem_.get(addr);
+        regs_.set(cm.dst_reg, val);
     }
 
     void visit(cmd::MovRM& cm) override {

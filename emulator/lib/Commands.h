@@ -30,6 +30,8 @@ namespace cmd {
     struct MovRI;
     struct MovRR;
     struct MovRM;
+    // Register indirect mode
+    struct MovRRm;
 
     struct PushR;
     struct PopR;
@@ -48,6 +50,7 @@ namespace cmd {
       , MOV_RR = 20
       , MOV_RI
       , MOV_RM
+      , MOV_RRm
 
       , CMP_RI = 41
 
@@ -74,6 +77,7 @@ public:
     virtual void visit(cmd::AddRI& cm)  = 0;
     virtual void visit(cmd::MovRI& cm)  = 0;
     virtual void visit(cmd::MovRR& cm)  = 0;
+    virtual void visit(cmd::MovRRm& cm)  = 0;
     virtual void visit(cmd::MovRM& cm)  = 0;
     virtual void visit(cmd::CmpRI& cm)  = 0;
     virtual void visit(cmd::JmpR& cm)   = 0;
@@ -175,6 +179,17 @@ namespace cmd {
         : ICommandHelper<MovRM>(MOV_RM)
         , dst_reg(dst)
         , src_addr(src) {
+        }
+    };
+
+    struct MovRRm: public ICommandHelper<MovRRm> {
+        reg::RegId dst_reg;
+        reg::RegId src_reg;
+
+        MovRRm(reg::RegId dst, reg::RegId src)
+        : ICommandHelper<MovRRm>(MOV_RRm)
+        , dst_reg(dst)
+        , src_reg(src) {
         }
     };
 
