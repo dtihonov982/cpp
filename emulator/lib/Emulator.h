@@ -64,11 +64,14 @@ private:
         regs_.set(reg::rbp, mem_.size());
     }
 
+    // After each operations call this to set flags.
     void setFlagsFromResult(Word result) {
+        regs_.resetAllFlags();
         regs_.set(reg::ZF, result == 0);
         regs_.set(reg::SF, result <  0);
     }
 
+    // This is helper for operations je, jz etc.
     void jump(Address addr) {
         regs_.set(reg::rip, addr);
     }
