@@ -5,6 +5,7 @@ set (SRCS adapter.cpp
           bridge.cpp
           factory.cpp
           abstract_factory.cpp
+          state.cpp
           builder.cpp
           chain.cpp
           decorator.cpp
