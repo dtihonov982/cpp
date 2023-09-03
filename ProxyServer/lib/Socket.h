@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <vector>
 
 using Socket = int;
 
@@ -33,13 +35,8 @@ public:
     _Skt(int fd, const sockaddr_in& addr, socklen_t addrlen)
     : fd_(fd), addr_(addr), addrlen_(addrlen) {}
 
-    std::string getAddress() {
-        return inet_ntoa(addr_.sin_addr);
-    }
-
-    uint16_t getPort() {
-        return ntohs(addr_.sin_port);
-    }
+    std::string getAddress();
+    uint16_t getPort();
     
     _Skt(const _Skt&) = delete;
     _Skt& operator=(const _Skt&) = delete;
@@ -48,20 +45,8 @@ public:
 
     ~_Skt() { close(fd_); }
 
-    std::vector<char> read() {
-        std::vector<char> data(1024);
-        int count = ::read(fd_, data.data(), data.size());
-        data.resize(count);
-        return data;
-    }
-
-    template<typename T>
-    int send(const T& data) {
-        int count = ::send(fd_, data.data(), data.size(), 0);
-        if (count != data.size()) 
-            throw std::runtime_error(strerror(errno));
-        return count;
-    }
+    std::vector<char> read();
+    int send(const std::vector<char>& data);
 
 private:
     int fd_;
