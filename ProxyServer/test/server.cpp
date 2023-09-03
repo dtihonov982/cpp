@@ -29,37 +29,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    Socket skt;
 
     try {
-        skt = server.accept();
-    }
-    catch (const std::runtime_error& ex) {
-        std::cerr << "Error whiile accpeting a new connection. " << ex.what() << std::endl;
-        return 1;
-    }
-
-
-    sockaddr_in client_addr;
-    socklen_t addrlen = sizeof(client_addr);
-    getpeername(skt, (sockaddr*)&client_addr , &addrlen); 
-    _Skt socket(skt, client_addr, addrlen);
-    std::cout << socket.getAddress() << std::endl;
-    std::cout << socket.getPort() << std::endl;
-
-
-    std::vector<char> buffer;
-    try {
-        buffer = socket.read();
+        _Skt skt = server.accept();
+        std::vector<char> buffer;
+        buffer = skt.read();
         std::cout << buffer.data() << std::endl;
-    }
-    catch (const std::runtime_error& ex) {
-        std::cerr << "Can't read a data from the socket. " << ex.what() << std::endl;
-        return 1;
-    }
-
-    try {
-        socket.send(buffer);
+        skt.send(buffer);
     }
     catch (const std::runtime_error& ex) {
         std::cerr << "Can't send a data. " << ex.what() << std::endl;

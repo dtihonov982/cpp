@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Socket.h"
+#include "Acceptor.h"
 
 std::ostream& log() {
     return std::cerr << "### ";
@@ -16,47 +17,13 @@ std::ostream& log() {
 
 class Server {
 public:
-    Server(int port): port_(port) {
-        addr_.sin_family = AF_INET;
-        addr_.sin_addr.s_addr = INADDR_ANY;
-        addr_.sin_port = htons(port_);
-    }
+    Server(int port): acceptor_(port) {}
 
     void init() {
-        fd_ = socket(AF_INET, SOCK_STREAM, 0);
-        if ( fd_ < 0) {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        int opt = 1;
-        if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        if (bind(fd_, (sockaddr*) &addr_, sizeof(addr_)) < 0) {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        if (listen(fd_, 3) < 0) {
-            throw std::runtime_error(strerror(errno));
-        }
-    
-        log() << "Listening port " << port_ << '\n';
     }
 
-    Socket accept() {
-        sockaddr_in client_addr;
-        socklen_t addrlen = sizeof(client_addr);
-        int new_socket = ::accept(fd_, (sockaddr*) &client_addr, &addrlen);
-        if (new_socket < 0) {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        log() << "New connection. Socket fd: " << new_socket 
-              << ", ip is " << inet_ntoa(client_addr.sin_addr) 
-              << ", port: " << ntohs(client_addr.sin_port) << '\n';
-
-        return new_socket;
+    _Skt accept() {
+        return acceptor_.accept();
     }
 
     void closeConnection(Socket client_fd) {
@@ -70,17 +37,10 @@ public:
         
     }
     virtual ~Server() {
-        shutdown(fd_, SHUT_RDWR);
     };
-
-    int getMasterSocket() {
-        return fd_;
-    }
         
 protected:
-    int port_;
-    Socket fd_ = -1;
-    sockaddr_in addr_;
+    Acceptor acceptor_;
 };
 
 #endif // SERVER_H
