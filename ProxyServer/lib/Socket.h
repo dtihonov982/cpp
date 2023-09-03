@@ -28,4 +28,45 @@ public:
     }
 };
 
+class _Skt {
+public:
+    _Skt(int fd, const sockaddr_in& addr, socklen_t addrlen)
+    : fd_(fd), addr_(addr), addrlen_(addrlen) {}
+
+    std::string getAddress() {
+        return inet_ntoa(addr_.sin_addr);
+    }
+
+    uint16_t getPort() {
+        return ntohs(addr_.sin_port);
+    }
+    
+    _Skt(const _Skt&) = delete;
+    _Skt& operator=(const _Skt&) = delete;
+    _Skt(_Skt&&) = default;
+    _Skt& operator=(_Skt&&) = default;
+
+    ~_Skt() { close(fd_); }
+
+    std::vector<char> read() {
+        std::vector<char> data(1024);
+        int count = ::read(fd_, data.data(), data.size());
+        data.resize(count);
+        return data;
+    }
+
+    template<typename T>
+    int send(const T& data) {
+        int count = ::send(fd_, data.data(), data.size(), 0);
+        if (count != data.size()) 
+            throw std::runtime_error(strerror(errno));
+        return count;
+    }
+
+private:
+    int fd_;
+    sockaddr_in addr_;
+    socklen_t addrlen_;
+};
+
 #endif // SOCKET_H

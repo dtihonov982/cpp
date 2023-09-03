@@ -6,6 +6,9 @@
 #include <stdexcept>
 #include <errno.h>
 #include <string.h>
+#include <vector>
+
+#include "Socket.h"
 
 std::ostream& log() {
     return std::cerr << "### ";
