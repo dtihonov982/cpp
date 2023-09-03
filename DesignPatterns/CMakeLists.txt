@@ -7,6 +7,7 @@ set (SRCS adapter.cpp
           abstract_factory.cpp
           state.cpp
           builder.cpp
+          interpreter.cpp
           chain.cpp
           decorator.cpp
           flyweight.cpp
