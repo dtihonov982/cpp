@@ -33,7 +33,10 @@ struct DbgScanner: public ITrafficScanner {
 
 class QueryLogger: public ITrafficScanner {
 public:
-    QueryLogger(std::string_view filename): os_(filename.data(), std::ios::app) {}
+    QueryLogger(std::string_view filename): os_(filename.data(), std::ios::app) {
+        if (!os_)
+            throw Exception("Can not open file ", filename, " for writing.");
+    }
 
     //Query message format: 1 byte - Message type, 4 bytes - Int32 message length, String - query text
     static constexpr int offset = 5;

@@ -10,6 +10,7 @@
 //#include <errno.h>
 //
 #include <string_view>
+#include <memory>
 //#include <set>
 #include <unordered_map>
 //#include <unordered_set>
@@ -27,13 +28,9 @@
 class ProxyServer: public Server {
 public:
  
-    ProxyServer(std::string_view targetIp, int targetPort, int proxyPort, ITrafficScanner* scanner)
+    ProxyServer(std::string_view targetIp, int targetPort, int proxyPort, const std::shared_ptr<ITrafficScanner>& scanner)
     : Server(proxyPort), targetIp_(targetIp), targetPort_(targetPort), scanner_(scanner) {
     }   
-
-    ProxyServer(std::string_view targetIp, int targetPort, int proxyPort)
-    :  ProxyServer(targetIp, targetPort, proxyPort, nullptr) {
-    }
 
     void openPipe(Socket connWithClient) {
         selector_.insert(connWithClient);
@@ -73,8 +70,7 @@ public:
             for (auto conn: readingPoll) {
                 std::vector<char> buffer = Connection::read(conn);
 
-                if (scanner_)
-                    scanner_->scan(buffer, conn);
+                scanner_->scan(buffer, conn);
 
                 Socket relatedConn = pairs_[conn];
 
@@ -93,6 +89,6 @@ private:
     int targetPort_;
     std::unordered_map<Socket, Socket> pairs_;
     Selector selector_;
-    ITrafficScanner* scanner_;
+    std::shared_ptr<ITrafficScanner> scanner_;
 };
 #endif // PROXYSERVER_H
