@@ -14,6 +14,7 @@ set (SRCS adapter.cpp
           observer.cpp
           prototype.cpp
           visitor.cpp
+          MVC.cpp
 )
 
 foreach (SRC IN LISTS SRCS)
