@@ -52,6 +52,24 @@ catch(const std::invalid_argument& ex) {
     return 1;
 }
 
+std::vector<
+    std::pair<It, It>
+>
+divide(It begin, It end, size_t count) {
+    std::vector< std::pair<It, It> > result;
+    int size = end - begin;
+    int maxChunk = size % count ? size / count + 1 : size / count;
+
+    for (int i = 0; i < count; ++i) {
+        auto first = begin + i * maxChunk;
+        auto last =  first + maxChunk;
+        last = std::min(last, end);
+        result.emplace_back(first, last);
+    }
+
+    return result;
+}
+
 int64_t sum(It begin, It end, size_t threadsCount) {
     int size = end - begin;
     if (size < 0)
@@ -60,15 +78,15 @@ int64_t sum(It begin, It end, size_t threadsCount) {
         return 0;
     if (size < threadsCount)
         throw std::invalid_argument("data size < threads count");
-    int maxChunk = size % threadsCount ? size / threadsCount + 1 : size / threadsCount;
+    auto chunks = divide(begin, end, threadsCount);
+
     std::vector<int64_t> subresults(threadsCount);
     std::vector<std::thread> threads;
     threads.reserve(threadsCount); 
-    for (int i = 0; i < threadsCount; ++i) {
-        auto first = begin + i * maxChunk;
-        auto last =  first + maxChunk;
-        last = std::min(last, end);
+    size_t i = 0;
+    for (auto [first, last]: chunks) {
         threads.emplace_back(&sumImpl, first, last, &subresults[i]);
+        ++i;
     }
 
     int64_t total = 0;
