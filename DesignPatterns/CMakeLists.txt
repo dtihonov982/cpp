@@ -15,6 +15,8 @@ set (SRCS adapter.cpp
           prototype.cpp
           visitor.cpp
           MVC.cpp
+          facade.cpp
+          null_object.cpp
 )
 
 foreach (SRC IN LISTS SRCS)
