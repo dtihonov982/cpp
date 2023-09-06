@@ -5,6 +5,7 @@
 *.depend
 *.cbp
 *.o
+*.ods
 *.dll
 *.out
 *.swp
