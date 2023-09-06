@@ -5,6 +5,8 @@ set (SRCS adapter.cpp
           bridge.cpp
           factory.cpp
           abstract_factory.cpp
+          filter.cpp
+          composite.cpp
           state.cpp
           builder.cpp
           interpreter.cpp
