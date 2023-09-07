@@ -14,6 +14,7 @@ set (SRCS adapter.cpp
           decorator.cpp
           flyweight.cpp
           observer.cpp
+          mediator.cpp
           prototype.cpp
           visitor.cpp
           MVC.cpp
