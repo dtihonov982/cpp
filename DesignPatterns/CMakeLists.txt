@@ -8,6 +8,8 @@ set (SRCS adapter.cpp
           filter.cpp
           composite.cpp
           state.cpp
+          proxy.cpp
+          singletone.cpp
           builder.cpp
           interpreter.cpp
           chain.cpp
@@ -15,6 +17,7 @@ set (SRCS adapter.cpp
           flyweight.cpp
           observer.cpp
           mediator.cpp
+          memento.cpp
           prototype.cpp
           visitor.cpp
           MVC.cpp
