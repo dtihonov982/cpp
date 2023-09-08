@@ -8,7 +8,7 @@
 
 using DataType = char;
 
-//Information about allocated memory
+// A Block represents an area that was allocated with an operator new.
 struct Block {
     DataType* data;
     int dataSize;

@@ -1,3 +1,9 @@
+// This program accumulates numbers from 0 to <data size>.
+// The program repeats that operation with different count of thread.
+// For each count of thread from 1 to <threads count> the program measures duration of an execution.
+// So it is possible to see how a count of thread impacts on an execution duration.
+// A result of this program is in file "thread.cpp.png"
+
 #include <iostream>
 #include <string>
 #include <thread>

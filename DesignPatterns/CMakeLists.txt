@@ -1,3 +1,5 @@
+# https://www.tutorialspoint.com/design_pattern/design_pattern_overview.htm
+
 cmake_minimum_required (VERSION 3.25)
 project (DesignPatterns)
 
@@ -30,6 +32,6 @@ set (SRCS adapter.cpp
 foreach (SRC IN LISTS SRCS)
     string (REPLACE ".cpp" "" TGT ${SRC})
     add_executable(${TGT} ${SRC})
-    target_compile_options (${TGT} PUBLIC -fsanitize=address)
+    target_compile_options (${TGT} PUBLIC -fsanitize=address -Wall)
     target_link_options (${TGT} PUBLIC -fsanitize=address)
 endforeach ()
