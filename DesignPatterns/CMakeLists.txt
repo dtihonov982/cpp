@@ -25,6 +25,7 @@ set (SRCS adapter.cpp
           MVC.cpp
           command.cpp
           facade.cpp
+          template.cpp
           strategy.cpp
           null_object.cpp
 )
