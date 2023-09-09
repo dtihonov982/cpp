@@ -3,31 +3,33 @@
 cmake_minimum_required (VERSION 3.25)
 project (DesignPatterns)
 
-set (SRCS adapter.cpp
-          bridge.cpp
-          factory.cpp
-          abstract_factory.cpp
-          filter.cpp
-          composite.cpp
-          state.cpp
-          proxy.cpp
-          singletone.cpp
-          builder.cpp
-          interpreter.cpp
-          chain.cpp
-          decorator.cpp
-          flyweight.cpp
-          observer.cpp
-          mediator.cpp
-          memento.cpp
-          prototype.cpp
-          visitor.cpp
-          MVC.cpp
-          command.cpp
-          facade.cpp
-          template.cpp
-          strategy.cpp
-          null_object.cpp
+set (SRCS 
+            abstract_factory.cpp
+            adapter.cpp
+            bridge.cpp
+            builder.cpp
+            chain.cpp
+            command.cpp
+            composite.cpp
+            decorator.cpp
+            facade.cpp
+            factory.cpp
+            filter.cpp
+            flyweight.cpp
+            interpreter.cpp
+            iterator.cpp
+            mediator.cpp
+            memento.cpp
+            MVC.cpp
+            null_object.cpp
+            observer.cpp
+            prototype.cpp
+            proxy.cpp
+            singletone.cpp
+            state.cpp
+            strategy.cpp
+            template.cpp
+            visitor.cpp
 )
 
 foreach (SRC IN LISTS SRCS)
