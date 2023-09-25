@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 3.25)
 project (emulator)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory (programs)
 add_subdirectory (lib)
 add_subdirectory (test)
