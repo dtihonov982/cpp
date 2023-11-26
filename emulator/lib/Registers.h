@@ -12,6 +12,8 @@ namespace reg {
 enum RegId { r0 = 0, r1, r2, r3, rip = 10, rsp = 15, rbp};
 enum FlagId { ZF = 6, SF = 7 };
 
+RegId getRegIdByName(const std::string& name);
+
 // CPU Registers
 class Registers {
 public:

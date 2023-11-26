@@ -1,21 +1,21 @@
 movri   r1, 19
-calli   $fib
+calli   fib
 end
 
 fib:
 pushr   rbp
 movrr   rbp, rsp
 cmpri   r1,  2
-jli     $done
+jli     done
 
 addri   r1, -1
 pushr   r1
-calli   $fib
+calli   fib
 
 popr    r1
 pushr   r0
 addri   r1, -1
-calli   $fib
+calli   fib
 
 popr    r2
 addrr   r0, r2
