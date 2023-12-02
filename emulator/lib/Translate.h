@@ -106,10 +106,11 @@ public:
         return buffer;
     }
 
-    Block encode(cmd::list& prog) {
+    template <typename It>
+    Block encode(It begin, It end) {
         init();
-        for (auto cm: prog) {
-            cm->accept(this);
+        for (auto it = begin; it != end; it++) {
+            (*it)->accept(this);
         }
         return getBinaryCode();
     }

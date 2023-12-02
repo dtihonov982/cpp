@@ -7,17 +7,19 @@
 #include <algorithm>
 #include "Definitions.h"
 
+// TODO: move to Common.h
 template <typename It>
-void truncatePrint(It begin, It end, std::ostream& os, int width) {
+void truncatePrint(It begin, It end, std::ostream& os, int width, bool lineNumbers =  true) {
     size_t i = 0;
     for (auto it = begin; it != end; ) {
-        os << i << ":\t";
+        if (lineNumbers)
+            os << i << ":\t";
         for (size_t k = 0; it != end && k != width; ++k) {
             os << *it << '\t';
             ++it;
         }
         i += width;
-        std::cout << '\n';
+        os << '\n';
     }
 }
 
