@@ -31,7 +31,7 @@ public:
         std::cout << std::endl;
     }
     std::string getName() const { return name_; }
-    std::vector<std::string> getArgs() const { return args_; }
+    std::string getArg(size_t index) const { return args_[index]; }
 private:
     std::string name_;
     std::vector<std::string> args_;
